@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import SecondaryNav from '../components/SecondaryNav.astro';
 import { getBlogMetadata } from '../data/content';
+import { resolveBlogImage } from '../utils/blogAssets';
 
 const blogMetadata = await getBlogMetadata();
 const rawPosts = await getCollection('blog', ({ data }) => !data.draft);
@@ -23,11 +24,12 @@ const posts = rawPosts
     const dateDisplay = date
       ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
       : undefined;
-    return { post, title, summary, publishDate, dateISO, dateDisplay };
+    const heroImage = resolveBlogImage(post.slug, post.data.heroImage);
+    return { post, title, summary, publishDate, dateISO, dateDisplay, heroImage };
   })
   .sort((a, b) => b.publishDate - a.publishDate);
 
-const postsPayload = posts.map(({ post, title, summary, publishDate, dateISO, dateDisplay }) => ({
+const postsPayload = posts.map(({ post, title, summary, publishDate, dateISO, dateDisplay, heroImage }) => ({
   slug: post.slug,
   url: `/blog/${post.slug}/`,
   title,
@@ -35,7 +37,8 @@ const postsPayload = posts.map(({ post, title, summary, publishDate, dateISO, da
   tags: post.data.tags,
   publishDate,
   dateISO,
-  dateDisplay
+  dateDisplay,
+  heroImage
 }));
 
 const defaultSort = blogMetadata.sortOptions?.[0]?.value ?? 'latest';
@@ -240,6 +243,7 @@ const defaultSort = blogMetadata.sortOptions?.[0]?.value ?? 'latest';
     flex-wrap: wrap;
     gap: clamp(16px, 4vw, 24px);
     align-items: flex-end;
+    flex-direction: row;
   }
 
   .search-field,
@@ -247,11 +251,14 @@ const defaultSort = blogMetadata.sortOptions?.[0]?.value ?? 'latest';
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex: 1 1 min(320px, 100%);
+  }
+
+  .search-field {
+    flex: 1 1 300px;
   }
 
   .sort-field {
-    flex: 0 0 min(220px, 100%);
+    flex: 0 0 200px;
   }
 
   .search-label,

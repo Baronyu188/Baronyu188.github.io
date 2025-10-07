@@ -1,0 +1,30 @@
+const blogImageModules = import.meta.glob('../content/blog/**/*.{png,jpg,jpeg,webp,avif,svg}', {
+  eager: true,
+  import: 'default'
+}) as Record<string, any>;
+
+const isExternal = (value: string) => /^(https?:)?\/\//.test(value);
+
+const normalize = (value: string) => value.replace(/^\.\//, '');
+
+export const resolveBlogImage = (slug: string, source?: string | null) => {
+  if (!source) return undefined;
+  if (isExternal(source)) return source;
+  if (source.startsWith('/')) return source;
+
+  const normalized = normalize(source);
+  const directKey = `../content/blog/${slug}/${normalized}`;
+  if (directKey in blogImageModules) {
+    const module = blogImageModules[directKey];
+    // 处理 import.meta.glob 返回的对象结构
+    return typeof module === 'object' && module.src ? module.src : module;
+  }
+
+  const fallbackEntry = Object.entries(blogImageModules).find(([key]) => key.endsWith(`/${normalized}`));
+  if (fallbackEntry) {
+    const [, module] = fallbackEntry;
+    // 处理 import.meta.glob 返回的对象结构
+    return typeof module === 'object' && module.src ? module.src : module;
+  }
+  return source;
+};

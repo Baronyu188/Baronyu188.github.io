@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import SecondaryNav from '../../components/SecondaryNav.astro';
+import { resolveBlogImage } from '../../utils/blogAssets';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -30,6 +31,8 @@ const publishedISO = date ? date.toISOString() : undefined;
 const publishedDisplay = date
   ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
   : undefined;
+
+const heroImage = resolveBlogImage(post.slug, post.data.heroImage);
 
 const rawSuggested = await getCollection('blog', ({ data, slug: s }) => !data.draft && s !== post.slug);
 const suggested = rawSuggested
@@ -71,9 +74,9 @@ const suggested = rawSuggested
         {derivedSummary && <p class="summary">{derivedSummary}</p>}
       </header>
 
-      {post.data.heroImage && (
+      {heroImage && (
         <figure class="hero-visual" data-reveal>
-          <img src={post.data.heroImage} alt={derivedTitle} loading="lazy" />
+          <img src={heroImage} alt={derivedTitle} loading="lazy" />
         </figure>
       )}
 

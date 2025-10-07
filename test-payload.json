@@ -1,0 +1,117 @@
+---
+import { getGalleryImages, getHeroContent, getResourceCards, getTeamMembers } from './src/data/content';
+import { getCollection } from 'astro:content';
+
+const heroContent = await getHeroContent();
+const commands = heroContent.commands ?? [
+  { command: 'help', description: '获取帮助信息' },
+  { command: 'whoami', description: '"我们" 是谁？' },
+  { command: 'pwd', description: '显示当前目录' },
+  { command: 'ls [路径]', description: '列出目录内容' },
+  { command: 'cd <路径>', description: '切换目录' },
+  { command: 'cat <文件名>', description: '读取文件' },
+  { command: 'echo <文本>', description: '输出文本' },
+  { command: 'neofetch', description: '好玩的' },
+  { command: 'history', description: '查看命令记录' },
+  { command: 'date', description: '当前时间' },
+  { command: 'refresh', description: '刷新终端状态' },
+  { command: 'clear', description: '清空屏幕' }
+];
+
+const galleryImages = await getGalleryImages();
+const postsCollection = await getCollection('blog', ({ data }) => !data.draft);
+const resourcesCollection = await getResourceCards();
+const teamMembers = await getTeamMembers();
+
+const galleryEntries = galleryImages.map((image) => {
+  const src = typeof image.src === 'string' ? image.src : '';
+  return {
+    name: src.split('/').pop() || 'image',
+    type: 'file',
+    content: `图片: ${src}`
+  };
+});
+
+const postEntries = postsCollection.map((post) => {
+  const heading = post.body.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const title = post.data.title ?? heading ?? post.slug;
+  const summaryBlock =
+    post.data.summary ??
+    post.body
+      .replace(/^#.*$/gm, '')
+      .split(/\n{2,}/)
+      .find((block) => block.trim());
+  const summary = summaryBlock ? summaryBlock.replace(/\s+/g, ' ').trim() : '(摘要待补充)';
+  return {
+    name: `${post.slug}.md`,
+    type: 'file',
+    content: `${title}\n\n${summary}`
+  };
+});
+
+const resourceEntries = resourcesCollection
+  .filter((resource) => 'title' in resource)
+  .map((resource) => ({
+    name: `${resource.title.replace(/\s+/g, '_')}.md`,
+    type: 'file',
+    content: `${resource.title}\n${resource.description}`
+  }));
+
+const teamEntries = teamMembers.map((member) => ({
+  name: `${member.name.replace(/\s+/g, '_')}.txt`,
+  type: 'file',
+  content: `${member.name}\n${member.role}\n${member.bio}`
+}));
+
+const metricsContent = (heroContent.metrics ?? [])
+  .map((metric) => metric.label + ': ' + metric.value)
+  .join('\n');
+const commandsContent = commands
+  .map((command) => command.command + (command.description ? ' - ' + command.description : ''))
+  .join('\n');
+
+const fsTree = {
+  name: '/',
+  type: 'dir',
+  children: [
+    { name: 'about.txt', type: 'file', content: heroContent.description },
+    { name: 'metrics.txt', type: 'file', content: metricsContent },
+    { name: 'commands.txt', type: 'file', content: commandsContent },
+    { name: 'gallery', type: 'dir', children: galleryEntries },
+    { name: 'blog', type: 'dir', children: postEntries },
+    { name: 'resources', type: 'dir', children: resourceEntries },
+    { name: 'team', type: 'dir', children: teamEntries }
+  ]
+};
+
+const payload = {
+  title: heroContent.title,
+  description: heroContent.description,
+  metrics: heroContent.metrics,
+  commands,
+  asciiArt: heroContent.asciiArt,
+  fs: fsTree
+};
+
+// 输出JSON字符串用于调试
+const jsonString = JSON.stringify(payload, null, 2);
+console.log('JSON String Length:', jsonString.length);
+console.log('First 500 chars:', jsonString.substring(0, 500));
+console.log('Last 500 chars:', jsonString.substring(jsonString.length - 500));
+
+// 检查是否有特殊字符
+const hasSpecialChars = /[\x00-\x1F\x7F-\x9F]/.test(jsonString);
+console.log('Has special control characters:', hasSpecialChars);
+
+// 尝试解析验证
+let parsed;
+try {
+  parsed = JSON.parse(jsonString);
+  console.log('JSON parsing successful');
+} catch (e) {
+  console.error('JSON parsing failed:', e.message);
+  console.error('Error position:', e.message.match(/position (\d+)/)?.[1]);
+}
+---
+
+{"test": "data"}

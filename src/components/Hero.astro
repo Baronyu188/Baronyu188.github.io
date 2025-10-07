@@ -69,10 +69,10 @@ const teamEntries = teamMembers.map((member) => ({
 }));
 
 const metricsContent = (heroContent.metrics ?? [])
-  .map((metric) => `${metric.label}: ${metric.value}`)
+  .map((metric) => metric.label + ': ' + metric.value)
   .join('\n');
 const commandsContent = commands
-  .map((command) => `${command.command}${command.description ? ' - ' + command.description : ''}`)
+  .map((command) => command.command + (command.description ? ' - ' + command.description : ''))
   .join('\n');
 
 const fsTree = {
@@ -122,7 +122,7 @@ const payload = {
         <span class="terminal-dot" data-variant="close"></span>
         <span class="terminal-dot" data-variant="min"></span>
         <span class="terminal-dot" data-variant="max"></span>
-        <span class="terminal-title">root@foeai: ~</span>
+        <span class="terminal-title">小终端 · 让技术的想象力在校园里生长</span>
       </div>
       <div class="terminal-screen" data-terminal-screen></div>
       <div class="terminal-input" data-terminal-input-shell>
@@ -139,12 +139,10 @@ const payload = {
       </div>
     </div>
   </div>
-  <script type="application/json" id="hero-payload">{JSON.stringify(payload)}</script>
 </section>
 
-<script type="module">
-  const payloadElement = document.getElementById('hero-payload');
-  const data = payloadElement ? JSON.parse(payloadElement.textContent || '{}') : null;
+<script type="module" define:vars={{payload}}>
+  const data = payload;
   const terminal = document.querySelector('[data-terminal]');
 
   if (data && terminal) {
@@ -164,8 +162,8 @@ const payload = {
     let currentPath = '/';
 
     const renderLine = ({ type, text }) => {
-      if (type === 'pre') return `<pre class="line line-pre">${escapeHTML(text)}</pre>`;
-      return `<div class="line line-${type}">${escapeHTML(text)}</div>`;
+      if (type === 'pre') return '<pre class="line line-pre">' + escapeHTML(text) + '</pre>';
+      return '<div class="line line-' + type + '">' + escapeHTML(text) + '</div>';
     };
 
     const render = () => {
@@ -212,7 +210,7 @@ const payload = {
     const listDir = (path, { showAll = false } = {}) => {
       const node = resolve(path);
       if (!node) {
-        push(`ls: 无法访问 '${path}': 没有那个文件或目录`, 'error');
+        push('ls: 无法访问 \'' + path + '\': 没有那个文件或目录', 'error');
         return;
       }
       if (node.type === 'file') {
@@ -225,27 +223,26 @@ const payload = {
         if (path !== '/') entries.push('..');
       }
       (node.children || [])
-        .map((child) => (child.type === 'dir' ? `${child.name}/` : child.name))
+        .map((child) => (child.type === 'dir' ? child.name + '/' : child.name))
         .forEach((entry) => entries.push(entry));
 
       entries.sort((a, b) => a.localeCompare(b));
-      push(entries.join('
-') || '(空目录)', 'output');
+      const listing = entries.join('  ');
+      push(listing || '(空目录)', 'output');
     };
 
     const readFile = (path) => {
       const node = resolve(path);
       if (!node) {
-        push(`cat: ${path}: 没有那个文件`, 'error');
+        push('cat: ' + path + ': 没有那个文件', 'error');
         return;
       }
       if (node.type === 'dir') {
-        push(`cat: ${path}: 是一个目录`, 'error');
+        push('cat: ' + path + ': 是一个目录', 'error');
         return;
       }
-      const content = node.content ?? '';
-      push(content, content.includes('
-') ? 'pre' : 'output');
+      const content = node.content ?? "";
+      push(content, content.includes('\n') ? 'pre' : 'output');
     };
 
     const buildTree = (node, prefix = '') => {
@@ -257,37 +254,36 @@ const payload = {
           const connector = isLast ? '└── ' : '├── ';
           const nextPrefix = prefix + (isLast ? '    ' : '│   ');
           if (child.type === 'dir') {
-            const header = `${prefix}${connector}${child.name}/`;
+            const header = prefix + connector + child.name + '/';
             const nested = buildTree(child, nextPrefix);
-            return nested ? `${header}\n${nested}` : header;
+            return nested ? header + '\n' + nested : header;
           }
-          return `${prefix}${connector}${child.name}`;
+          return prefix + connector + child.name;
         })
         .filter(Boolean)
-        .join('
-');
+        .join('\n');
     };
 
     const showTree = (path) => {
       const node = resolve(path);
       if (!node) {
-        push(`tree: 无法访问 '${path}': 没有那个文件或目录`, 'error');
+        push('tree: 无法访问 \'' + path + '\': 没有那个文件或目录', 'error');
         return;
       }
       if (node.type === 'file') {
-        push(`tree: ${path}: 目标是一个文件`, 'error');
+        push('tree: ' + path + ': 目标是一个文件', 'error');
         return;
       }
       const header = `${displayPath(path)}/`;
       const body = buildTree(node);
-      push(body ? `${header}\n${body}` : header, 'pre');
+      push(body ? header + '\n' + body : header, 'pre');
     };
 
-    const prompt = () => `root@foeai:${displayPath(currentPath)}$`;
+    const prompt = () => 'root@foeai:' + displayPath(currentPath) + '$';
 
     const seed = () => {
       lines.length = 0;
-      push(`欢迎来到 ${data.title} 终端，输入 help 获取帮助信息。`, 'system');
+      push('欢迎来到 ' + data.title + ' 终端，输入 help 获取帮助信息。', 'system');
       render();
       updatePromptLabel();
     };
@@ -295,7 +291,7 @@ const payload = {
     const showHelp = () => {
       push('可用命令:', 'output');
       commandList.forEach((item) => {
-        push(`${item.command}${item.description ? '  —  ' + item.description : ''}`, 'output');
+        push(item.command + (item.description ? '  —  ' + item.description : ''), 'output');
       });
     };
 
@@ -312,7 +308,7 @@ const payload = {
         const target = normalize(args[0] ?? '/');
         const node = resolve(target);
         if (!node || node.type !== 'dir') {
-          push(`cd: ${args[0] || '/'}: 没有那个目录`, 'error');
+          push('cd: ' + (args[0] || '/') + ': 没有那个目录', 'error');
           return;
         }
         currentPath = target;
@@ -327,10 +323,17 @@ const payload = {
       },
       echo: (args) => push(args.join(' '), 'output'),
       neofetch: () => {
-        push((data.asciiArt || []).join('
-'), 'pre');
+        const foeaiArt = [
+          '███████╗ ██████╗ ███████╗',
+          '██╔════╝██╔═══██╗██╔════╝',
+          '█████╗  ██║   ██║█████╗  ',
+          '██╔══╝  ██║   ██║██╔══╝  ',
+          '██║     ╚██████╔╝███████╗',
+          '╚═╝      ╚═════╝ ╚══════╝'
+        ];
+        push(foeaiArt.join('\n'), 'pre');
         (data.metrics || []).forEach((metric) => {
-          push(`${metric.label}: ${metric.value}`, 'output');
+          push(metric.label + ': ' + metric.value, 'output');
         });
       },
       history: () => {
@@ -338,7 +341,7 @@ const payload = {
           push('暂无历史记录', 'output');
           return;
         }
-        history.forEach((item, index) => push(`${index + 1}  ${item}`, 'output'));
+        history.forEach((item, index) => push((index + 1) + '  ' + item, 'output'));
       },
       date: () => push(new Date().toLocaleString('zh-CN', { hour12: false }), 'output'),
       refresh: () => push('refresh: 终端状态已同步', 'system'),
@@ -351,7 +354,7 @@ const payload = {
 
     const handleSubmit = (raw) => {
       if (!raw) return;
-      push(`${prompt()} ${raw}`, 'prompt');
+      push(prompt() + ' ' + raw, 'prompt');
       const tokens = raw.trim().split(/\s+/);
       const command = tokens.shift() ?? '';
       const args = tokens;
@@ -366,7 +369,7 @@ const payload = {
           updatePromptLabel();
         }
       } else {
-        push(`命令未找到: ${command}`, 'error');
+        push('命令未找到: ' + command, 'error');
         render();
       }
     };
@@ -499,16 +502,20 @@ const payload = {
   .terminal-dot[data-variant='max'] { background: #33c94f; }
 
   .terminal-title {
-    margin-left: 6px;
+    margin-left: auto;
+    margin-right: auto;
     font-size: 0.7rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.6);
+    flex: 1;
+    text-align: center;
   }
 
   .terminal-screen {
     flex: 1;
-    min-height: clamp(280px, 50vh, 460px);
+    height: clamp(280px, 50vh, 460px);
+    max-height: clamp(280px, 50vh, 460px);
     background: radial-gradient(circle at 20% 20%, rgba(58, 81, 154, 0.18), transparent 70%), #0d1023;
     color: rgba(226, 229, 245, 0.92);
     font-family: 'Ubuntu Sans Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
@@ -516,6 +523,21 @@ const payload = {
     font-size: 0.92rem;
     line-height: 1.6;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  .terminal-screen::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .terminal-screen::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .terminal-screen::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
   }
 
   .terminal-input {

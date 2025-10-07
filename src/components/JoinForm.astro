@@ -2,6 +2,12 @@
 import { getJoinForm } from '../data/content';
 
 const joinForm = await getJoinForm();
+const defaultHighlights = [
+  '线上线下结合的启动周，快速熟悉团队。',
+  '专属导师与同伴评审，持续精进作品。',
+  '入会后三个月即可申请项目孵化资源。'
+];
+const highlightItems = joinForm.highlights && joinForm.highlights.length ? joinForm.highlights : defaultHighlights;
 ---
 <section id="join" aria-labelledby="join-title">
   <div class="section-inner join-grid outline-card" data-reveal>
@@ -10,9 +16,9 @@ const joinForm = await getJoinForm();
       <h2 class="section-title" id="join-title">{joinForm.title}</h2>
       <p class="section-description">{joinForm.description}</p>
       <ul class="join-highlights">
-        <li>线上线下结合的启动周，快速熟悉团队。</li>
-        <li>专属导师与同伴评审，持续精进作品。</li>
-        <li>入会后三个月即可申请项目孵化资源。</li>
+        {highlightItems.map((item) => (
+          <li>{item}</li>
+        ))}
       </ul>
     </div>
     <form class="join-form" method="post" action="#" data-join-form>

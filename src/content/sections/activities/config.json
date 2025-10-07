@@ -10,24 +10,52 @@
       "title": "Liquid UI Night",
       "timeframe": "10 月·体验共创",
       "description": "与 Apple 平台设计师共创液态界面交互，探索视觉反馈与真实感之间的平衡。",
+      "image": "liquid-ui-night.jpg",
+      "details": [
+        "参与人数：50+",
+        "活动时长：3小时",
+        "合作伙伴：Apple 设计团队",
+        "技术栈：SwiftUI、Core Animation"
+      ],
       "order": 1
     },
     {
       "title": "Campus Dev Summit",
       "timeframe": "11 月·黑客松",
       "description": "48 小时沉浸式黑客松，产出校园生活的真实解决方案并集成上线。",
+      "image": "campus-dev-summit.jpg",
+      "details": [
+        "参赛队伍：25支",
+        "开发时长：48小时",
+        "奖池总额：¥50,000",
+        "评审标准：创新性、实用性、技术难度"
+      ],
       "order": 2
     },
     {
       "title": "Neural Study Jam",
       "timeframe": "12 月·学习营",
       "description": "围绕生成式 AI 的深度实践工作坊，从提示策略到模型部署一站式打通。",
+      "image": "neural-study-jam.jpg",
+      "details": [
+        "学习周期：6周",
+        "实践项目：8个",
+        "导师团队：AI领域专家",
+        "技术覆盖：LLM、Prompt Engineering、模型微调"
+      ],
       "order": 3
     },
     {
       "title": "Hardware Playground",
       "timeframe": "1 月·实验室",
       "description": "联合工程实验室开放硬件调试之夜，动手搭建互动艺术与智能装置。",
+      "image": "hardware-playground.jpg",
+      "details": [
+        "实验设备：Arduino、树莓派、传感器套件",
+        "创作主题：智能艺术装置",
+        "展示形式：交互式展览",
+        "合作方：工程学院实验室"
+      ],
       "order": 4
     }
   ]

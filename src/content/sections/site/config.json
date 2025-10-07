@@ -4,8 +4,8 @@
     { "label": "课程", "href": "#courses" },
     { "label": "团队", "href": "#team" },
     { "label": "资源", "href": "#resources" },
-    { "label": "影像", "href": "#gallery" },
-    { "label": "博客", "href": "#stories" }
+    { "label": "影像", "href": "/gallery/" },
+    { "label": "博客", "href": "/blog/" }
   ],
   "hero": {
     "title": "School Computer Association",
@@ -59,6 +59,11 @@
         "type": "textarea",
         "required": false
       }
+    ],
+    "highlights": [
+      "线上线下结合的启动周，快速熟悉团队。",
+      "专属导师与同伴评审，持续精进作品。",
+      "入会后三个月即可申请项目孵化资源。"
     ]
   }
 }

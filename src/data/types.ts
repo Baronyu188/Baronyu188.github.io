@@ -41,6 +41,7 @@ export interface JoinForm {
   title: string;
   description: string;
   fields: JoinFormField[];
+  highlights?: string[];
 }
 
 export interface SectionMetadata {
@@ -75,6 +76,8 @@ export interface ActivityItem extends OrderedItem {
   title: string;
   timeframe: string;
   description: string;
+  image?: string;
+  details?: string[];
 }
 
 export interface CourseItem extends OrderedItem {
@@ -82,6 +85,9 @@ export interface CourseItem extends OrderedItem {
   detail: string;
   format: string;
   focus: string;
+  image?: string;
+  syllabus?: string[];
+  outcomes?: string[];
 }
 
 export interface ProjectItem extends OrderedItem {
@@ -97,6 +103,9 @@ export interface TeamMember extends OrderedItem {
   role: string;
   bio: string;
   image?: string;
+  skills?: string[];
+  achievements?: string[];
+  contact?: string;
 }
 
 export interface ResourceItem extends OrderedItem {

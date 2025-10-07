@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { getGalleryImages } from '../data/content';
+import { resolveBlogImage } from '../utils/blogAssets';
 
 const rawPosts = await getCollection('blog', ({ data }) => !data.draft);
 const galleryImages = await getGalleryImages();
@@ -22,7 +23,8 @@ const posts = rawPosts
     const dateDisplay = date
       ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
       : undefined;
-    return { post, title, summary, publishDate, dateISO, dateDisplay };
+    const heroImage = resolveBlogImage(post.slug, post.data.heroImage);
+    return { post, title, summary, publishDate, dateISO, dateDisplay, heroImage };
   })
   .sort((a, b) => b.publishDate - a.publishDate)
   .slice(0, 3);
@@ -40,11 +42,11 @@ const posts = rawPosts
       {posts.length === 0 ? (
         <p class="empty">博客即将上线，敬请期待。</p>
       ) : (
-        posts.map(({ post, title, summary, dateISO, dateDisplay }) => (
+        posts.map(({ post, title, summary, dateISO, dateDisplay, heroImage }) => (
           <article class="story-card outline-card" data-story-card data-reveal>
             <a href={`/blog/${post.slug}/`} class="story-shell">
               <div class="story-media">
-                <img src={post.data.heroImage ?? fallbackHeroImage} alt={title} loading="lazy" decoding="async" />
+                <img src={heroImage ?? fallbackHeroImage} alt={title} loading="lazy" decoding="async" />
               </div>
               <div class="story-meta">
                 {dateISO && dateDisplay && (

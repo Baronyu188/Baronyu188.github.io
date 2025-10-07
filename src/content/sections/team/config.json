@@ -12,6 +12,13 @@
       "role": "主席 · 产品方向",
       "bio": "前 Apple Swift 学院大使，关注产品体验与跨团队协作。",
       "image": "jiang.svg",
+      "skills": ["产品设计", "用户体验", "团队管理", "SwiftUI"],
+      "achievements": [
+        "Apple Swift 学院大使",
+        "WWDC23 奖学金获得者",
+        "省级创新创业大赛一等奖"
+      ],
+      "contact": "jiang@sca.org",
       "order": 1
     },
     {
@@ -19,6 +26,13 @@
       "role": "技术总监 · AI",
       "bio": "国家级大数据竞赛金奖，主导校内智能化项目落地。",
       "image": "wu.svg",
+      "skills": ["机器学习", "深度学习", "Python", "TensorFlow"],
+      "achievements": [
+        "国家级大数据竞赛金奖",
+        "Kaggle 竞赛 Master",
+        "发表AI论文2篇"
+      ],
+      "contact": "wu@sca.org",
       "order": 2
     },
     {
@@ -26,6 +40,13 @@
       "role": "视觉总监",
       "bio": "2024 Apple Swift 学生挑战赛获奖者，擅长多维度视觉叙事。",
       "image": "lin.svg",
+      "skills": ["视觉设计", "UI/UX", "动效设计", "Figma"],
+      "achievements": [
+        "Apple Swift 学生挑战赛获奖者",
+        "红点设计概念奖",
+        "Behance 优秀作品推荐"
+      ],
+      "contact": "lin@sca.org",
       "order": 3
     },
     {
@@ -33,6 +54,13 @@
       "role": "运营与社群",
       "bio": "负责社群运营与合作伙伴拓展，构建开放共创的生态。",
       "image": "chen.svg",
+      "skills": ["社群运营", "品牌策划", "活动组织", "商务合作"],
+      "achievements": [
+        "校园十佳社团负责人",
+        "组织活动50+场次",
+        "合作企业20+家"
+      ],
+      "contact": "chen@sca.org",
       "order": 4
     }
   ]

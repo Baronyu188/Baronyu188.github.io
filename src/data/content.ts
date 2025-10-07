@@ -44,8 +44,13 @@ const teamAssetModules = import.meta.glob('../content/sections/team/media/*', {
 
 const toFileName = (filePath: string) => filePath.split('/').pop() ?? filePath;
 
-const mapAssets = (modules: Record<string, string>) =>
-  Object.fromEntries(Object.entries(modules).map(([key, value]) => [toFileName(key), value])) as Record<string, string>;
+const mapAssets = (modules: Record<string, any>) =>
+  Object.fromEntries(Object.entries(modules).map(([key, value]) => {
+    const fileName = toFileName(key);
+    // 处理 import.meta.glob 返回的对象结构
+    const imagePath = typeof value === 'object' && value.src ? value.src : value;
+    return [fileName, imagePath];
+  })) as Record<string, string>;
 
 const galleryAssets = mapAssets(galleryAssetModules);
 const projectAssets = mapAssets(projectAssetModules);
