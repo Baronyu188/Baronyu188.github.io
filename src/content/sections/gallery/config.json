@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "id": "gallery",
+    "label": "Gallery",
+    "title": "瞬间捕捉：自定义影像库",
+    "description": "将照片放入 src/content/sections/gallery/media 即可替换展示内容。支持主流图片格式，刷新页面即可生效。"
+  }
+}

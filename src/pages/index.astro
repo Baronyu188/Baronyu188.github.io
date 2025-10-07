@@ -1,11 +1,44 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Navigation from '../components/Navigation.astro';
+import Hero from '../components/Hero.astro';
+import Activities from '../components/Activities.astro';
+import Courses from '../components/Courses.astro';
+import Team from '../components/Team.astro';
+import Resources from '../components/Resources.astro';
+import Gallery from '../components/Gallery.astro';
+import BlogPreview from '../components/BlogPreview.astro';
 ---
-
 <Layout>
-	<Welcome />
+  <Navigation />
+  <main>
+    <Hero />
+    <Activities />
+    <Courses />
+    <Team />
+    <Resources />
+    <Gallery />
+    <BlogPreview />
+  </main>
+  <footer class="site-footer">
+    <div class="section-inner">
+      <p>学校电脑协会 · School Computer Association</p>
+      <p>文案与主题色可在 <code>src/data/content.ts</code> 与 <code>src/styles/global.css</code> 中快速替换。</p>
+    </div>
+  </footer>
 </Layout>
+
+<style>
+  .site-footer {
+    padding: clamp(40px, 8vw, 80px) clamp(24px, 6vw, 80px);
+    color: var(--fg-subtle);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border-hairline);
+    background: rgba(255, 255, 255, 0.66);
+  }
+
+  .site-footer .section-inner {
+    align-items: flex-start;
+    gap: 12px;
+  }
+</style>

@@ -1,0 +1,69 @@
+---
+import { getCourseTracks, getCoursesMetadata } from '../data/content';
+
+const [courseTracks, metadata] = await Promise.all([getCourseTracks(), getCoursesMetadata()]);
+---
+<section id="courses" aria-labelledby="courses-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="courses-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="course-grid">
+      {courseTracks.map((track) => (
+        <article class="course-card outline-card" data-reveal>
+          <header>
+            <span class="course-focus">{track.focus}</span>
+            <h3>{track.title}</h3>
+          </header>
+          <p>{track.detail}</p>
+          <footer>
+            <span>{track.format}</span>
+          </footer>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(20px, 4vw, 32px);
+  }
+
+  .course-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: rgba(255, 255, 255, 0.78);
+    min-height: 260px;
+    transition: transform 260ms var(--transition-soft), border-color 260ms var(--transition-soft);
+  }
+
+  .course-card:hover,
+  .course-card:focus-within {
+    transform: translateY(-4px);
+    border-color: rgba(18, 18, 18, 0.22);
+  }
+
+  .course-focus {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 6px 12px;
+    border: 1px solid rgba(18, 18, 18, 0.12);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  footer {
+    font-size: 0.95rem;
+    color: var(--fg-muted);
+    margin-top: auto;
+  }
+</style>

@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "id": "activities",
+    "label": "Programs",
+    "title": "不止于例行会议的活动矩阵",
+    "description": "通过沉浸式体验、跨学科学习和黑客松竞速，将灵感快速转化为可落地的校园产品。滚动或拖动，探索近期活动。"
+  },
+  "items": [
+    {
+      "title": "Liquid UI Night",
+      "timeframe": "10 月·体验共创",
+      "description": "与 Apple 平台设计师共创液态界面交互，探索视觉反馈与真实感之间的平衡。",
+      "order": 1
+    },
+    {
+      "title": "Campus Dev Summit",
+      "timeframe": "11 月·黑客松",
+      "description": "48 小时沉浸式黑客松，产出校园生活的真实解决方案并集成上线。",
+      "order": 2
+    },
+    {
+      "title": "Neural Study Jam",
+      "timeframe": "12 月·学习营",
+      "description": "围绕生成式 AI 的深度实践工作坊，从提示策略到模型部署一站式打通。",
+      "order": 3
+    },
+    {
+      "title": "Hardware Playground",
+      "timeframe": "1 月·实验室",
+      "description": "联合工程实验室开放硬件调试之夜，动手搭建互动艺术与智能装置。",
+      "order": 4
+    }
+  ]
+}

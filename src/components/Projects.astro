@@ -1,0 +1,209 @@
+---
+import { getProjectContent } from '../data/content';
+
+const { metadata, directions: projectDirections, projects } = await getProjectContent();
+const defaultDirection = projectDirections.includes('全部')
+  ? '全部'
+  : projectDirections[0] ?? '全部';
+const fallbackImage = projects[0]?.image ?? '';
+---
+<section id="projects" aria-labelledby="projects-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="projects-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="button-row" role="tablist" aria-label="项目方向筛选" data-project-filter>
+      {projectDirections.map((direction) => (
+        <button
+          type="button"
+          class="ghost-button"
+          data-direction={direction}
+          data-state={direction === defaultDirection ? 'active' : 'idle'}
+          role="tab"
+          aria-selected={direction === defaultDirection}
+        >
+          {direction}
+        </button>
+      ))}
+    </div>
+    <div class="projects-grid" data-project-list>
+      {projects.map((project) => (
+        <article
+          class="project-card outline-card"
+          data-project
+          data-direction={project.direction}
+          data-reveal
+        >
+          <figure class="project-media" data-project-media>
+            <img
+              src={project.image ?? fallbackImage}
+              alt={project.title}
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="project-glow" aria-hidden="true"></span>
+          </figure>
+          <header>
+            <span class="project-direction">{project.direction}</span>
+            <h3>{project.title}</h3>
+          </header>
+          <p>{project.description}</p>
+          <footer>
+            <span>{project.outcome}</span>
+          </footer>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script type="module">
+  const filterRoot = document.querySelector('[data-project-filter]');
+  const buttons = filterRoot ? Array.from(filterRoot.querySelectorAll('button')) : [];
+  const projects = Array.from(document.querySelectorAll('[data-project]'));
+  let activeDirection = '${defaultDirection}';
+
+  const applyFilter = (direction) => {
+    activeDirection = direction;
+    buttons.forEach((button) => {
+      const isActive = button.dataset.direction === direction;
+      button.dataset.state = isActive ? 'active' : 'idle';
+      button.setAttribute('aria-selected', String(isActive));
+    });
+    projects.forEach((card) => {
+      const shouldShow = direction === '全部' || card.dataset.direction === direction;
+      card.toggleAttribute('hidden', !shouldShow);
+    });
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => applyFilter(button.dataset.direction ?? '${defaultDirection}'));
+    button.addEventListener('keydown', (event) => {
+      const index = buttons.indexOf(button);
+      if (['ArrowRight', 'ArrowDown'].includes(event.key)) {
+        event.preventDefault();
+        const next = buttons[(index + 1) % buttons.length];
+        next.focus();
+        applyFilter(next.dataset.direction ?? activeDirection);
+      }
+      if (['ArrowLeft', 'ArrowUp'].includes(event.key)) {
+        event.preventDefault();
+        const prev = buttons[(index - 1 + buttons.length) % buttons.length];
+        prev.focus();
+        applyFilter(prev.dataset.direction ?? activeDirection);
+      }
+    });
+  });
+
+  applyFilter(activeDirection);
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+  const projectCards = Array.from(document.querySelectorAll('[data-project]'));
+
+  projectCards.forEach((card) => {
+    card.addEventListener('pointermove', (event) => {
+      const rect = card.getBoundingClientRect();
+      const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+      card.style.setProperty('--pointer-x', x.toFixed(3));
+      card.style.setProperty('--pointer-y', y.toFixed(3));
+    });
+
+    card.addEventListener('pointerleave', () => {
+      card.style.removeProperty('--pointer-x');
+      card.style.removeProperty('--pointer-y');
+    });
+  });
+</script>
+
+<style>
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(20px, 4vw, 32px);
+  }
+
+  .project-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: clamp(20px, 3.2vw, 28px);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 26px;
+    transition: transform 320ms var(--transition-soft), border-color 320ms var(--transition-soft), box-shadow 320ms var(--transition-soft);
+  }
+
+  .project-card[hidden] {
+    display: none;
+  }
+
+  .project-card:hover,
+  .project-card:focus-visible {
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(18, 18, 18, 0.18);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+  }
+
+  .project-card header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .project-direction {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .project-media {
+    position: relative;
+    width: 100%;
+    border-radius: 22px;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 320ms var(--transition-soft), box-shadow 320ms var(--transition-soft);
+  }
+
+  .project-media img {
+    width: 100%;
+    height: clamp(160px, 24vw, 220px);
+    object-fit: cover;
+    transition: transform 360ms var(--transition-soft);
+  }
+
+  .project-glow {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), rgba(255, 255, 255, 0.4), transparent 70%);
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+
+  .project-card:hover .project-media,
+  .project-card:focus-visible .project-media {
+    transform: rotateX(calc((0.5 - var(--pointer-y, 0.5)) * 10deg)) rotateY(calc((var(--pointer-x, 0.5) - 0.5) * 10deg));
+    box-shadow: 0 24px 60px rgba(15, 30, 60, 0.18);
+  }
+
+  .project-card:hover .project-media img,
+  .project-card:focus-visible .project-media img {
+    transform: scale(1.08);
+  }
+
+  .project-card:hover .project-glow,
+  .project-card:focus-visible .project-glow {
+    opacity: 1;
+  }
+
+  .project-card footer {
+    margin-top: auto;
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+  }
+</style>

@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "id": "courses",
+    "label": "Curriculum",
+    "title": "课程模块：从洞察到工程落地",
+    "description": "每个模块都配备导师陪伴、工作坊与项目反哺，让学习与实践同步发生。"
+  },
+  "items": [
+    {
+      "title": "产品洞察课",
+      "detail": "理解需求、定义体验与原型验证，搭建用户体验的基石。",
+      "format": "8 周·双导师制",
+      "focus": "产品策略",
+      "order": 1
+    },
+    {
+      "title": "Swift 前端课",
+      "detail": "以 SwiftUI 为核心，串联跨平台界面开发与动画表达技巧。",
+      "format": "6 周·工作坊",
+      "focus": "移动开发",
+      "order": 2
+    },
+    {
+      "title": "AI 工程课",
+      "detail": "从数据清洗、模型微调到服务部署，构建端到端的 AI 能力。",
+      "format": "10 周·小组制",
+      "focus": "人工智能",
+      "order": 3
+    }
+  ]
+}

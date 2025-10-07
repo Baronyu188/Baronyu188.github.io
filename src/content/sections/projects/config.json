@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "id": "projects",
+    "label": "Projects",
+    "title": "项目孵化：真实落地的成果",
+    "description": "基于方向的小组协作，结合 Apple 风格的高质视觉与工程标准，打造可上线的作品。筛选方向查看案例。"
+  },
+  "items": [
+    {
+      "title": "Lumen 校园能耗仪表盘",
+      "direction": "AI",
+      "description": "通过机器学习预测校区能耗并动态调度，实现 12% 能源节约。",
+      "outcome": "部署于行政楼实时大屏",
+      "image": "lumen.svg",
+      "order": 1
+    },
+    {
+      "title": "Pulse 社团运营平台",
+      "direction": "产品",
+      "description": "统一管理报名、排期与反馈，帮助 90+ 社团完成数字化升级。",
+      "outcome": "全校社团正式上线",
+      "image": "pulse.svg",
+      "order": 2
+    },
+    {
+      "title": "Muse 交互音像展",
+      "direction": "体验设计",
+      "description": "结合 LiDAR 动态识别的沉浸式展览，呈现校园创作者故事。",
+      "outcome": "校艺术季最佳互动奖",
+      "image": "muse.svg",
+      "order": 3
+    },
+    {
+      "title": "CoreKit 自主键盘",
+      "direction": "智能硬件",
+      "description": "为编程社群打造的模块化键盘，支持热插拔与自定义配列。",
+      "outcome": "批量生产 50 套",
+      "image": "corekit.svg",
+      "order": 4
+    },
+    {
+      "title": "Atlas AI 办公助手",
+      "direction": "AI",
+      "description": "内置问答、排课与资料检索的 AI 助理，为教学与行政提供即时支持。",
+      "outcome": "进入孵化加速阶段",
+      "image": "atlas.svg",
+      "order": 5
+    }
+  ]
+}

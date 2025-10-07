@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "id": "team",
+    "label": "Team",
+    "title": "核心团队：多元背景的导师与学生领袖",
+    "description": "我们的团队由曾在 Apple、顶尖赛事获奖的学生组成，负责教学设计、技术研发与社群运营。"
+  },
+  "fallbackImage": "default.svg",
+  "members": [
+    {
+      "name": "江浩然",
+      "role": "主席 · 产品方向",
+      "bio": "前 Apple Swift 学院大使，关注产品体验与跨团队协作。",
+      "image": "jiang.svg",
+      "order": 1
+    },
+    {
+      "name": "吴芷晴",
+      "role": "技术总监 · AI",
+      "bio": "国家级大数据竞赛金奖，主导校内智能化项目落地。",
+      "image": "wu.svg",
+      "order": 2
+    },
+    {
+      "name": "林柏宇",
+      "role": "视觉总监",
+      "bio": "2024 Apple Swift 学生挑战赛获奖者，擅长多维度视觉叙事。",
+      "image": "lin.svg",
+      "order": 3
+    },
+    {
+      "name": "陈思睿",
+      "role": "运营与社群",
+      "bio": "负责社群运营与合作伙伴拓展，构建开放共创的生态。",
+      "image": "chen.svg",
+      "order": 4
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "id": "about",
+    "label": "Association",
+    "title": "学校电脑协会如何运作？",
+    "description": "我们将最具 Apple 气质的精致主义与校园真实场景结合，打造以学员为中心的科研与项目生态。",
+    "actions": [
+      { "label": "了解课程路径", "href": "#courses", "variant": "primary" },
+      { "label": "走进影像", "href": "#gallery", "variant": "ghost" }
+    ]
+  },
+  "scenes": [
+    {
+      "label": "以真实需求驱动的校园产品",
+      "gradient": "radial-gradient(circle at 30% 30%, rgba(15, 98, 254, 0.18), rgba(15, 98, 254, 0) 58%), linear-gradient(135deg, #f8faff 0%, #ffffff 70%)",
+      "accent": "rgba(15, 98, 254, 0.32)"
+    },
+    {
+      "label": "项目反哺课程的学习闭环",
+      "gradient": "radial-gradient(circle at 70% 30%, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0) 60%), linear-gradient(155deg, #ffffff 12%, #f3f5fb 92%)",
+      "accent": "rgba(18, 18, 18, 0.22)"
+    },
+    {
+      "label": "开放透明的协作文化",
+      "gradient": "radial-gradient(circle at 50% 70%, rgba(15, 98, 254, 0.12), rgba(15, 98, 254, 0) 66%), linear-gradient(165deg, #f7f8fb 0%, #ffffff 100%)",
+      "accent": "rgba(84, 104, 255, 0.24)"
+    }
+  ],
+  "items": [
+    {
+      "title": "深耕校园场景",
+      "description": "以真实校园需求为驱动，从校园助手到社团系统，打造有生命力的数字产品。",
+      "order": 1
+    },
+    {
+      "title": "多元学习路径",
+      "description": "AI、前端、设计、硬件、产品多线并行，形成以项目反哺课程的学习闭环。",
+      "order": 2
+    },
+    {
+      "title": "开放协作文化",
+      "description": "面向所有热爱创造的同学，构建互助、透明、持续迭代的社群氛围。",
+      "order": 3
+    }
+  ]
+}

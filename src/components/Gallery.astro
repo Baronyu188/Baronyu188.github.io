@@ -1,0 +1,155 @@
+---
+import { getGalleryImages, getGalleryMetadata } from '../data/content';
+
+const [galleryImages, metadata] = await Promise.all([getGalleryImages(), getGalleryMetadata()]);
+const hasImages = galleryImages.length > 0;
+const previewImages = galleryImages.slice(0, 6);
+const hasMore = galleryImages.length > 6;
+---
+<section id="gallery" aria-labelledby="gallery-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="gallery-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    {hasImages ? (
+      <>
+        <div class="gallery-grid" data-gallery>
+          {previewImages.map((image) => (
+            <figure class="gallery-card" data-gallery-card data-reveal>
+              <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+            </figure>
+          ))}
+        </div>
+        {hasMore && (
+          <div class="gallery-actions" data-reveal>
+            <a class="cta-button" href="/gallery">打开全部影像</a>
+          </div>
+        )}
+      </>
+    ) : (
+      <p class="gallery-empty" data-reveal>
+        暂无影像，请将图片放入 <code>src/content/sections/gallery/media</code> 目录后刷新查看。
+      </p>
+    )}
+  </div>
+</section>
+
+<script type="module">
+  const cards = Array.from(document.querySelectorAll('[data-gallery-card]'));
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  cards.forEach((card) => {
+    const handlePointer = (event) => {
+      const rect = card.getBoundingClientRect();
+      const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+      card.style.setProperty('--pointer-x', x.toFixed(3));
+      card.style.setProperty('--pointer-y', y.toFixed(3));
+    };
+
+    card.addEventListener('pointermove', handlePointer);
+    card.addEventListener('pointerleave', () => {
+      card.style.removeProperty('--pointer-x');
+      card.style.removeProperty('--pointer-y');
+    });
+
+    card.addEventListener('focus', () => {
+      card.style.setProperty('--pointer-x', '0.5');
+      card.style.setProperty('--pointer-y', '0.5');
+    });
+
+    card.addEventListener('blur', () => {
+      card.style.removeProperty('--pointer-x');
+      card.style.removeProperty('--pointer-y');
+    });
+  });
+</script>
+
+<style>
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(18px, 3.6vw, 32px);
+  }
+
+  .gallery-card {
+    position: relative;
+    padding: clamp(10px, 2vw, 14px);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(18, 18, 18, 0.12);
+    overflow: hidden;
+    transition: transform 360ms var(--transition-soft), border-color 320ms var(--transition-soft), box-shadow 360ms var(--transition-soft);
+  }
+
+  .gallery-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    object-fit: cover;
+    transform-origin: center;
+    transition: transform 360ms var(--transition-soft), box-shadow 360ms var(--transition-soft);
+  }
+
+  .gallery-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), rgba(255, 255, 255, 0.35), transparent 65%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 320ms ease;
+  }
+
+  .gallery-card:hover,
+  .gallery-card:focus-visible {
+    transform: translateY(-8px) scale(1.02) rotateX(calc((0.5 - var(--pointer-y, 0.5)) * 10deg)) rotateY(calc((var(--pointer-x, 0.5) - 0.5) * 10deg));
+    border-color: rgba(18, 18, 18, 0.2);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.16);
+  }
+
+  .gallery-card:hover::after,
+  .gallery-card:focus-visible::after {
+    opacity: 1;
+  }
+
+  .gallery-card:hover img,
+  .gallery-card:focus-visible img {
+    transform: scale(1.08);
+    box-shadow: 0 20px 48px rgba(15, 30, 60, 0.22);
+  }
+  .gallery-actions {
+    margin-top: clamp(16px, 4vw, 28px);
+  }
+
+  .gallery-actions .cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(18, 18, 18, 0.16);
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--fg);
+    transition: transform 240ms var(--transition-soft), border-color 240ms var(--transition-soft);
+  }
+
+  .gallery-actions .cta-button:hover,
+  .gallery-actions .cta-button:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(18, 18, 18, 0.24);
+  }
+
+  .gallery-empty {
+    color: var(--fg-subtle);
+    margin-top: clamp(18px, 4vw, 32px);
+  }
+
+</style>

@@ -1,0 +1,160 @@
+---
+import { getTeamFallbackImage, getTeamMembers, getTeamMetadata } from '../data/content';
+
+const [team, metadata] = await Promise.all([getTeamMembers(), getTeamMetadata()]);
+const fallbackAvatar = getTeamFallbackImage();
+---
+<section id="team" aria-labelledby="team-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="team-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="team-grid">
+      {team.map((member, index) => (
+        <article class="team-card outline-card" data-reveal data-team-card>
+          <div class="avatar-shell" data-team-visual>
+            <img
+              src={member.image ?? fallbackAvatar}
+              alt={`${member.name} portrait`}
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="avatar-glow" aria-hidden="true"></span>
+          </div>
+          <div class="team-meta">
+            <h3>{member.name}</h3>
+            <p class="team-role">{member.role}</p>
+            <p class="team-bio">{member.bio}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script type="module">
+  const cards = Array.from(document.querySelectorAll('[data-team-card]'));
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  const handlePointer = (card, event) => {
+    const rect = card.getBoundingClientRect();
+    const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+    card.style.setProperty('--pointer-x', x.toFixed(3));
+    card.style.setProperty('--pointer-y', y.toFixed(3));
+  };
+
+  cards.forEach((card) => {
+    card.addEventListener('pointermove', (event) => handlePointer(card, event));
+    card.addEventListener('pointerleave', () => {
+      card.style.removeProperty('--pointer-x');
+      card.style.removeProperty('--pointer-y');
+    });
+  });
+</script>
+
+<style>
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: clamp(24px, 4vw, 36px);
+  }
+
+  .team-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: clamp(20px, 3vw, 28px);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform 360ms var(--transition-soft), border-color 320ms var(--transition-soft), box-shadow 360ms var(--transition-soft);
+  }
+
+  .team-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), rgba(255, 255, 255, 0.32), transparent 65%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 320ms ease;
+  }
+
+  .team-card:hover,
+  .team-card:focus-visible {
+    transform: translateY(-6px) scale(1.01);
+    border-color: rgba(18, 18, 18, 0.18);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+  }
+
+  .team-card:hover::after,
+  .team-card:focus-visible::after {
+    opacity: 1;
+  }
+
+  .avatar-shell {
+    position: relative;
+    width: clamp(86px, 12vw, 112px);
+    aspect-ratio: 1;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(18, 18, 18, 0.12);
+    transform-style: preserve-3d;
+    transition: transform 260ms var(--transition-soft), border-color 260ms var(--transition-soft);
+  }
+
+  .avatar-shell img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: center;
+    transition: transform 320ms var(--transition-soft);
+  }
+
+  .avatar-glow {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6), transparent 65%),
+      radial-gradient(circle at 70% 70%, rgba(15, 98, 254, 0.28), transparent 70%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+
+  .team-card:hover .avatar-shell,
+  .team-card:focus-visible .avatar-shell {
+    transform: rotateX(calc((0.5 - var(--pointer-y, 0.5)) * 12deg)) rotateY(calc((var(--pointer-x, 0.5) - 0.5) * 12deg)) translateZ(6px);
+    border-color: rgba(18, 18, 18, 0.22);
+  }
+
+  .team-card:hover .avatar-shell img,
+  .team-card:focus-visible .avatar-shell img {
+    transform: scale(1.08);
+  }
+
+  .team-card:hover .avatar-glow,
+  .team-card:focus-visible .avatar-glow {
+    opacity: 1;
+  }
+
+  .team-meta h3 {
+    font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+  }
+
+  .team-role {
+    font-size: 0.82rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .team-bio {
+    color: var(--fg-muted);
+    line-height: 1.7;
+  }
+</style>

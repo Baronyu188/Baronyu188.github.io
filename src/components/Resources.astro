@@ -1,0 +1,64 @@
+---
+import { getResourceCards, getResourcesMetadata } from '../data/content';
+
+const [resources, metadata] = await Promise.all([getResourceCards(), getResourcesMetadata()]);
+---
+<section id="resources" aria-labelledby="resources-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="resources-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="resources-list">
+      {resources.map((item) => (
+        <a class="resource-card outline-card" href={item.href} data-reveal>
+          <header>
+            <h3>{item.title}</h3>
+            <span class="resource-link">{item.linkLabel}</span>
+          </header>
+          <p>{item.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .resources-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: clamp(20px, 4vw, 32px);
+  }
+
+  .resource-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.82);
+    transition: transform 260ms var(--transition-soft), border-color 260ms var(--transition-soft);
+  }
+
+  .resource-card:hover,
+  .resource-card:focus-visible {
+    transform: translateY(-6px);
+    border-color: rgba(18, 18, 18, 0.22);
+  }
+
+  .resource-card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .resource-link {
+    font-size: 0.8rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .resource-card p {
+    color: var(--fg-muted);
+  }
+</style>

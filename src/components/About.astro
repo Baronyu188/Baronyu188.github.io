@@ -1,0 +1,441 @@
+---
+import { getHighlightScenes, getHighlightsMetadata, getIntroHighlights } from '../data/content';
+
+const [introHighlights, metadata, stageScenes] = await Promise.all([
+  getIntroHighlights(),
+  getHighlightsMetadata(),
+  getHighlightScenes()
+]);
+const firstScene = stageScenes[0] ?? {
+  label: '',
+  gradient: 'linear-gradient(135deg, #f8faff 0%, #ffffff 70%)',
+  accent: 'rgba(15, 98, 254, 0.32)'
+};
+---
+<section id="about" aria-labelledby="about-title">
+  <div class="section-inner about-grid">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="about-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="about-stage">
+      <div
+        class="stage-visual outline-card"
+        data-stage
+        data-active="0"
+        style={`--scene-gradient: ${firstScene.gradient}; --scene-accent: ${firstScene.accent};`}
+      >
+        <div class="stage-core"></div>
+        <div class="stage-footer">
+          <span class="stage-label" data-stage-label>{firstScene.label}</span>
+          <span class="stage-index" data-stage-index>01</span>
+        </div>
+      </div>
+      <div class="stage-list">
+        {introHighlights.map((item, index) => (
+          <article
+            class="stage-item outline-card"
+            data-stage-item
+            data-scene-index={index}
+            data-reveal
+            style={`--item-accent: ${stageScenes[index]?.accent ?? firstScene.accent}`}
+          >
+            <header>
+              <span class="stage-item-index">{String(index + 1).padStart(2, '0')}</span>
+              <h3>{item.title}</h3>
+            </header>
+            <p>{item.description}</p>
+          </article>
+        ))}
+      </div>
+      {metadata.actions && metadata.actions.length > 0 && (
+        <div class="stage-actions" data-reveal>
+          {metadata.actions.map((action) => (
+            <a class="cta-button" href={action.href} data-variant={action.variant ?? undefined}>
+              {action.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<script type="application/json" id="about-scenes-data">{JSON.stringify(stageScenes)}</script>
+
+<script type="module">
+  const dataElement = document.getElementById('about-scenes-data');
+  const scenes = dataElement ? JSON.parse(dataElement.textContent || '[]') : [];
+  const stage = document.querySelector('[data-stage]');
+  const labelEl = stage?.querySelector('[data-stage-label]');
+  const indexEl = stage?.querySelector('[data-stage-index]');
+  const items = Array.from(document.querySelectorAll('[data-stage-item]'));
+
+  if (!Array.isArray(scenes) || scenes.length === 0) {
+    stage?.removeAttribute('data-stage');
+    return;
+  }
+
+  let pointerFrame = 0;
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+  const applyPointer = (x, y) => {
+    if (!stage) return;
+    stage.style.setProperty('--pointer-x', x.toFixed(3));
+    stage.style.setProperty('--pointer-y', y.toFixed(3));
+  };
+
+  const schedulePointer = (event) => {
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+    if (pointerFrame) cancelAnimationFrame(pointerFrame);
+    pointerFrame = requestAnimationFrame(() => applyPointer(x, y));
+  };
+
+  const resetPointer = () => {
+    if (pointerFrame) cancelAnimationFrame(pointerFrame);
+    pointerFrame = requestAnimationFrame(() => applyPointer(0.5, 0.5));
+  };
+
+  stage?.addEventListener('pointermove', schedulePointer);
+  stage?.addEventListener('pointerleave', resetPointer);
+  stage?.addEventListener('touchmove', (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    schedulePointer(touch);
+  }, { passive: true });
+
+  resetPointer();
+
+  const setActive = (index) => {
+    if (!stage) return;
+    stage.dataset.active = index.toString();
+    stage.style.setProperty('--scene-gradient', scenes[index]?.gradient ?? scenes[0].gradient);
+    stage.style.setProperty('--scene-accent', scenes[index]?.accent ?? scenes[0].accent);
+    if (labelEl) labelEl.textContent = scenes[index]?.label ?? scenes[0].label;
+    if (indexEl) indexEl.textContent = String(index + 1).padStart(2, '0');
+    items.forEach((item, itemIndex) => {
+      item.toggleAttribute('data-active', itemIndex === index);
+    });
+  };
+
+  setActive(0);
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = Number(entry.target.dataset.sceneIndex ?? '0');
+            setActive(idx);
+          }
+        });
+      },
+      { threshold: 0.6, rootMargin: '-10% 0px -10% 0px' }
+    );
+    items.forEach((item) => observer.observe(item));
+  }
+
+  items.forEach((item) => {
+    item.addEventListener('mouseenter', () => {
+      const idx = Number(item.dataset.sceneIndex ?? '0');
+      setActive(idx);
+    });
+  });
+</script>
+
+<style>
+  .about-grid {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(36px, 8vw, 80px);
+  }
+
+  .about-stage {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.15fr);
+    gap: clamp(20px, 6vw, 56px);
+    align-items: stretch;
+  }
+
+  .stage-visual {
+    position: sticky;
+    top: clamp(72px, 12vw, 108px);
+    border-radius: 30px;
+    --pointer-x: 0.5;
+    --pointer-y: 0.5;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: clamp(360px, 45vw, 480px);
+    background: var(--scene-gradient);
+    box-shadow: 0 32px 90px rgba(15, 30, 60, 0.14);
+    transition: background 520ms var(--transition-soft), box-shadow 520ms var(--transition-soft);
+    animation: stageGradientDrift 18s ease-in-out infinite;
+  }
+
+  .stage-visual::before {
+    content: '';
+    position: absolute;
+    inset: 14% 16% 18% 16%;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(30px);
+    opacity: 0.75;
+  }
+
+  .stage-visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.28), transparent 55%),
+      radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.18), transparent 65%);
+    mix-blend-mode: screen;
+    opacity: 0.6;
+    animation: stageHighlight 12s ease-in-out infinite;
+  }
+
+  .stage-core::before {
+    content: '';
+    position: absolute;
+    inset: 16%;
+    border-radius: 24px;
+    background: radial-gradient(circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), var(--scene-accent, rgba(15, 98, 254, 0.3)) 0%, rgba(255, 255, 255, 0) 68%);
+    opacity: 0.55;
+    transition: transform 160ms ease-out, opacity 260ms ease-out;
+    transform: translate3d(calc((var(--pointer-x, 0.5) - 0.5) * 48px), calc((var(--pointer-y, 0.5) - 0.5) * 48px), 0);
+  }
+
+  .stage-core::after {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle at 70% 30%, var(--scene-accent, rgba(15, 98, 254, 0.28)), transparent 65%);
+    opacity: 0.45;
+    mix-blend-mode: lighten;
+    animation: coreGlow 14s ease-in-out infinite;
+  }
+
+  .stage-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(18px, 3vw, 26px);
+    font-size: 0.82rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+    border-top: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(18px);
+  }
+
+  .stage-label {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .stage-label::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--scene-accent, rgba(15, 98, 254, 0.28));
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--scene-accent, rgba(15, 98, 254, 0.28)) 22%, transparent);
+  }
+
+  .stage-index {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+  }
+
+  .stage-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3.6vw, 30px);
+    padding-left: clamp(18px, 3vw, 28px);
+  }
+
+  .stage-list::before {
+    content: '';
+    position: absolute;
+    left: clamp(6px, 1vw, 12px);
+    top: 16px;
+    bottom: 16px;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(18, 18, 18, 0.12), rgba(18, 18, 18, 0));
+  }
+
+  .stage-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: clamp(18px, 3vw, 26px) clamp(18px, 3.2vw, 30px);
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(18, 18, 18, 0.1);
+    border-radius: 22px;
+    transition:
+      transform 360ms var(--transition-soft),
+      border-color 360ms var(--transition-soft),
+      box-shadow 360ms var(--transition-soft),
+      background 360ms var(--transition-soft);
+  }
+
+  .stage-item::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * clamp(10px, 1.2vw, 16px));
+    top: clamp(20px, 3vw, 28px);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(18, 18, 18, 0.25);
+    transform: translateX(-50%);
+    transition: background 300ms ease, box-shadow 300ms ease;
+  }
+
+  .stage-item header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stage-item-index {
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .stage-item h3 {
+    font-size: clamp(1.16rem, 2.3vw, 1.5rem);
+    letter-spacing: -0.01em;
+  }
+
+  .stage-actions {
+    margin-top: clamp(8px, 2.4vw, 20px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border: 1px solid rgba(18, 18, 18, 0.16);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--fg);
+    transition: transform 220ms var(--transition-soft), border-color 220ms var(--transition-soft), background 220ms var(--transition-soft);
+  }
+
+  .cta-button:hover,
+  .cta-button:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(18, 18, 18, 0.28);
+  }
+
+  .cta-button[data-variant='ghost'] {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--fg-muted);
+  }
+
+  .cta-button[data-variant='ghost']:hover,
+  .cta-button[data-variant='ghost']:focus-visible {
+    color: var(--fg);
+  }
+
+  .stage-item[data-active] {
+    transform: translateX(-12px) scale(1.01);
+    border-color: rgba(18, 18, 18, 0.2);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.94);
+    animation: stageItemLift 420ms var(--transition-soft) both;
+  }
+
+  .stage-item[data-active]::before {
+    background: var(--item-accent, var(--scene-accent, rgba(15, 98, 254, 0.32)));
+    box-shadow: 0 0 0 9px color-mix(in srgb, var(--item-accent, var(--scene-accent, rgba(15, 98, 254, 0.32))) 28%, transparent);
+  }
+
+  .stage-item:hover {
+    border-color: rgba(18, 18, 18, 0.18);
+    transform: translateX(-8px);
+  }
+
+  @keyframes stageGradientDrift {
+    0%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -6px, 0);
+    }
+  }
+
+  @keyframes stageHighlight {
+    0%, 100% {
+      opacity: 0.55;
+    }
+    45% {
+      opacity: 0.85;
+    }
+  }
+
+  @keyframes coreGlow {
+    0%, 100% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(6deg) scale(1.04);
+    }
+  }
+
+  @keyframes stageItemLift {
+    0% {
+      transform: translateX(0) scale(1);
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+    100% {
+      transform: translateX(-12px) scale(1.01);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .about-stage {
+      grid-template-columns: 1fr;
+      gap: clamp(24px, 8vw, 40px);
+    }
+
+    .stage-visual {
+      position: relative;
+      top: auto;
+      min-height: clamp(320px, 60vw, 420px);
+    }
+
+    .stage-list {
+      padding-left: 0;
+    }
+
+    .stage-list::before,
+    .stage-item::before {
+      display: none;
+    }
+
+    .stage-item {
+      transform: none !important;
+      padding: clamp(16px, 5vw, 24px);
+    }
+  }
+</style>

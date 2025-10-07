@@ -1,0 +1,226 @@
+---
+import { getActivities, getActivitiesMetadata } from '../data/content';
+
+const [activities, metadata] = await Promise.all([getActivities(), getActivitiesMetadata()]);
+---
+<section id="activities" aria-labelledby="activities-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="activities-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="coverflow" data-coverflow>
+      <div class="coverflow-track" data-coverflow-track>
+        {activities.map((item, index) => (
+          <article class="cover-card outline-card" data-cover-card data-reveal data-index={index}>
+            <div class="card-head">
+              <span class="card-index">{String(index + 1).padStart(2, '0')}</span>
+              <span class="card-time">{item.timeframe}</span>
+            </div>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+          </article>
+        ))}
+      </div>
+      <div class="coverflow-hint" aria-hidden="true">
+        <span>拖动 / 滚动查看更多</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+  const coverflow = document.querySelector('[data-coverflow]');
+  const track = coverflow?.querySelector('[data-coverflow-track]');
+  const cards = track ? Array.from(track.querySelectorAll('[data-cover-card]')) : [];
+  let frameId = 0;
+
+  const updateTransforms = () => {
+    frameId = 0;
+    if (!track) return;
+    const rect = track.getBoundingClientRect();
+    const center = rect.left + rect.width / 2;
+
+    cards.forEach((card) => {
+      const { left, width } = card.getBoundingClientRect();
+      if (width === 0) return;
+      const cardCenter = left + width / 2;
+      const distance = (cardCenter - center) / width;
+      const clamped = Math.max(Math.min(distance, 2.5), -2.5);
+      const absDistance = Math.min(Math.abs(clamped), 1.4);
+      card.style.setProperty('--offset', clamped.toFixed(3));
+      card.style.setProperty('--abs-offset', absDistance.toFixed(3));
+      card.toggleAttribute('data-focus', absDistance < 0.45);
+    });
+  };
+
+  const scheduleUpdate = () => {
+    if (frameId) cancelAnimationFrame(frameId);
+    frameId = requestAnimationFrame(updateTransforms);
+  };
+
+  const initTilt = () => {
+    cards.forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        const tiltX = (0.5 - y) * 10;
+        const tiltY = (x - 0.5) * 10;
+        card.style.setProperty('--tilt-x', tiltX.toFixed(2));
+        card.style.setProperty('--tilt-y', tiltY.toFixed(2));
+        card.style.setProperty('--glow-x', `${(x * 100).toFixed(2)}%`);
+        card.style.setProperty('--glow-y', `${(y * 100).toFixed(2)}%`);
+      });
+
+      card.addEventListener('pointerleave', () => {
+        card.style.setProperty('--tilt-x', '0');
+        card.style.setProperty('--tilt-y', '0');
+      });
+    });
+  };
+
+  if (track && cards.length) {
+    scheduleUpdate();
+    window.addEventListener('resize', scheduleUpdate, { passive: true });
+    track.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('load', scheduleUpdate);
+    coverflow?.addEventListener('pointermove', scheduleUpdate);
+
+    if ('ResizeObserver' in window) {
+      const observer = new ResizeObserver(scheduleUpdate);
+      observer.observe(track);
+    }
+
+    initTilt();
+  }
+</script>
+
+<style>
+  .coverflow {
+    position: relative;
+    perspective: 1400px;
+    padding-block: clamp(12px, 4vw, 40px);
+  }
+
+  .coverflow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin-inline: clamp(12px, 4vw, 48px);
+    border-radius: 26px;
+    border: 1px solid rgba(18, 18, 18, 0.06);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.75), rgba(245, 245, 243, 0.4));
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .coverflow-track {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: clamp(24px, 4vw, 40px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-block: clamp(16px, 2vw, 32px);
+    padding-inline: clamp(24px, 5vw, 60px);
+    margin-inline: calc(-1 * clamp(24px, 5vw, 60px));
+    transform-style: preserve-3d;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .coverflow-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cover-card {
+    position: relative;
+    scroll-snap-align: center;
+    width: clamp(260px, 32vw, 340px);
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: rgba(255, 255, 255, 0.86);
+    border-radius: 24px;
+    border-width: 1.4px;
+    padding: clamp(22px, 3vw, 32px);
+    transition:
+      transform 540ms var(--transition-soft),
+      box-shadow 480ms var(--transition-soft),
+      border-color 320ms ease,
+      opacity 320ms ease;
+    transform:
+      translateX(calc(var(--offset, 0) * -12%))
+      translateZ(calc((1 - min(var(--abs-offset, 1), 1)) * 160px))
+      rotateY(calc(var(--offset, 0) * -18deg + var(--tilt-y, 0) * 1deg))
+      rotateX(calc(var(--tilt-x, 0) * 1deg));
+    opacity: calc(1 - min(var(--abs-offset, 1), 0.75) * 0.4);
+    backface-visibility: hidden;
+  }
+
+  .cover-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(60% 80% at var(--glow-x, 50%) var(--glow-y, 50%), rgba(255, 255, 255, 0.75), transparent 72%),
+      linear-gradient(160deg, rgba(15, 98, 254, 0.2), transparent 65%);
+    opacity: 0;
+    transition: opacity 420ms var(--transition-soft);
+    pointer-events: none;
+  }
+
+  .cover-card[data-focus] {
+    border-color: rgba(18, 18, 18, 0.18);
+    box-shadow: 0 35px 90px rgba(0, 0, 0, 0.16);
+  }
+
+  .cover-card[data-focus]::before {
+    opacity: 1;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    color: var(--fg-subtle);
+  }
+
+  .card-index {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(18, 18, 18, 0.12);
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .cover-card h3 {
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+    letter-spacing: -0.01em;
+  }
+
+  .cover-card p {
+    color: var(--fg-muted);
+  }
+
+  .coverflow-hint {
+    margin-top: clamp(12px, 2vw, 20px);
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  @media (max-width: 768px) {
+    .cover-card {
+      width: min(78vw, 320px);
+      min-height: 240px;
+    }
+  }
+</style>

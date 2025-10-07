@@ -1,0 +1,115 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getGalleryImages, getGalleryMetadata } from '../../data/content';
+
+const [images, metadata] = await Promise.all([getGalleryImages(), getGalleryMetadata()]);
+---
+<Layout title="影像库" description="浏览自定义的校园影像，照片维护统一放在 src/content/sections/gallery/media 目录。">
+  <main class="full-gallery">
+    <section class="intro" data-reveal>
+      <div class="header-with-back">
+        <a href="/" class="back-button" aria-label="返回主页">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          返回主页
+        </a>
+        <h1>{metadata.title}</h1>
+      </div>
+      <p>{metadata.description}</p>
+    </section>
+
+    {images.length === 0 ? (
+      <p class="empty">当前还没有影像文件，添加图片到 <code>src/content/sections/gallery/media</code> 后刷新查看。</p>
+    ) : (
+      <section class="grid" aria-label="影像列表">
+        {images.map((image) => (
+          <figure class="item" data-reveal>
+            <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+            <figcaption>{image.alt}</figcaption>
+          </figure>
+        ))}
+      </section>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .full-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(32px, 6vw, 64px);
+    padding: clamp(80px, 12vw, 120px) clamp(24px, 6vw, 96px) clamp(96px, 10vw, 140px);
+  }
+
+  .intro {
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: clamp(20px, 3vw, 32px);
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    padding: clamp(12px, 2.4vw, 18px);
+    border-radius: 22px;
+    border: 1px solid rgba(18, 18, 18, 0.12);
+  }
+
+  .item img {
+    width: 100%;
+    border-radius: 16px;
+    object-fit: cover;
+  }
+
+  .item figcaption {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+  }
+
+  .empty {
+    color: var(--fg-subtle);
+  }
+
+  .header-with-back {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border-hairline);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: transform 220ms var(--transition-soft), background 220ms var(--transition-soft), color 220ms var(--transition-soft), border-color 220ms var(--transition-soft);
+  }
+
+  .back-button:hover,
+  .back-button:focus-visible {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+  }
+
+  .back-button svg {
+    margin-top: 1px;
+  }
+</style>

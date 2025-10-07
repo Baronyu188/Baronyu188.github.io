@@ -1,0 +1,92 @@
+---
+import { getFaqMetadata, getFaqs } from '../data/content';
+
+const [faqs, metadata] = await Promise.all([getFaqs(), getFaqMetadata()]);
+---
+<section id="faq" aria-labelledby="faq-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">{metadata.label}</p>
+      <h2 class="section-title" id="faq-title">{metadata.title}</h2>
+      <p class="section-description">{metadata.description}</p>
+    </header>
+    <div class="faq-list">
+      {faqs.map((item) => (
+        <details class="faq-item outline-card" data-reveal>
+          <summary>
+            <span>{item.question}</span>
+            <span class="faq-icon" aria-hidden="true"></span>
+          </summary>
+          <p>{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 3vw, 24px);
+  }
+
+  .faq-item {
+    background: rgba(255, 255, 255, 0.78);
+    padding: clamp(20px, 3vw, 28px);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    list-style: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1.05rem;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(18, 18, 18, 0.16);
+    position: relative;
+  }
+
+  .faq-icon::before,
+  .faq-icon::after {
+    content: '';
+    position: absolute;
+    inset: 50%;
+    background: rgba(18, 18, 18, 0.5);
+    transform-origin: center;
+    transition: transform 200ms ease;
+  }
+
+  .faq-icon::before {
+    transform: translate(-50%, -50%) scaleX(0.6);
+    height: 1px;
+    width: 80%;
+  }
+
+  .faq-icon::after {
+    transform: translate(-50%, -50%) rotate(90deg) scaleX(0.6);
+    height: 1px;
+    width: 80%;
+  }
+
+  details[open] .faq-icon::after {
+    transform: translate(-50%, -50%) rotate(0deg) scaleX(0);
+  }
+
+  details p {
+    margin-top: 18px;
+    color: var(--fg-muted);
+  }
+</style>

@@ -1,0 +1,123 @@
+---
+import { getJoinForm } from '../data/content';
+
+const joinForm = await getJoinForm();
+---
+<section id="join" aria-labelledby="join-title">
+  <div class="section-inner join-grid outline-card" data-reveal>
+    <div class="join-copy">
+      <p class="section-eyebrow">Apply</p>
+      <h2 class="section-title" id="join-title">{joinForm.title}</h2>
+      <p class="section-description">{joinForm.description}</p>
+      <ul class="join-highlights">
+        <li>线上线下结合的启动周，快速熟悉团队。</li>
+        <li>专属导师与同伴评审，持续精进作品。</li>
+        <li>入会后三个月即可申请项目孵化资源。</li>
+      </ul>
+    </div>
+    <form class="join-form" method="post" action="#" data-join-form>
+      {joinForm.fields.map((field) => (
+        <label class="form-field">
+          <span>{field.label}</span>
+          {field.type === 'textarea' ? (
+            <textarea
+              id={field.id}
+              name={field.id}
+              placeholder={field.placeholder}
+              required={field.required}
+              rows="4"
+            ></textarea>
+          ) : (
+            <input
+              id={field.id}
+              name={field.id}
+              type={field.type}
+              placeholder={field.placeholder}
+              required={field.required}
+            />
+          )}
+        </label>
+      ))}
+      <button type="submit" class="primary-action">提交申请</button>
+      <p class="form-feedback" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<script type="module">
+  const form = document.querySelector('[data-join-form]');
+  const feedback = form?.querySelector('.form-feedback');
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!feedback) return;
+    const formData = new FormData(form);
+    const name = formData.get('name');
+    feedback.textContent = `欢迎${name ? `，${name}` : ''}加入，我们将在 3 个工作日内联系你。`;
+    form.reset();
+  });
+</script>
+
+<style>
+  .join-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
+    gap: clamp(24px, 5vw, 48px);
+    padding: clamp(26px, 5vw, 48px);
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .join-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .join-highlights {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--fg-muted);
+  }
+
+  .join-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.95rem;
+  }
+
+  input,
+  textarea {
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(18, 18, 18, 0.16);
+    background: rgba(255, 255, 255, 0.88);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: rgba(15, 98, 254, 0.4);
+    box-shadow: 0 0 0 4px rgba(15, 98, 254, 0.12);
+  }
+
+  .form-feedback {
+    min-height: 24px;
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+  }
+
+  @media (max-width: 840px) {
+    .join-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

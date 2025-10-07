@@ -1,0 +1,356 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import SecondaryNav from '../components/SecondaryNav.astro';
+import { getBlogMetadata } from '../data/content';
+
+const blogMetadata = await getBlogMetadata();
+const rawPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = rawPosts
+  .map((post) => {
+    const headingMatch = post.body.match(/^#\s+(.+)/m);
+    const title = post.data.title ?? headingMatch?.[1]?.trim() ?? post.slug;
+    const summarySource =
+      post.data.summary ??
+      post.body
+        .replace(/^#.*$/gm, '')
+        .split(/\n{2,}/)
+        .find((block) => block.trim());
+    const summary = summarySource ? summarySource.replace(/\s+/g, ' ').trim() : undefined;
+    const date = post.data.publishDate ?? null;
+    const publishDate = date ? date.valueOf() : 0;
+    const dateISO = date ? date.toISOString() : undefined;
+    const dateDisplay = date
+      ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      : undefined;
+    return { post, title, summary, publishDate, dateISO, dateDisplay };
+  })
+  .sort((a, b) => b.publishDate - a.publishDate);
+
+const postsPayload = posts.map(({ post, title, summary, publishDate, dateISO, dateDisplay }) => ({
+  slug: post.slug,
+  url: `/blog/${post.slug}/`,
+  title,
+  summary,
+  tags: post.data.tags,
+  publishDate,
+  dateISO,
+  dateDisplay
+}));
+
+const defaultSort = blogMetadata.sortOptions?.[0]?.value ?? 'latest';
+---
+
+<Layout title={blogMetadata.title} description={blogMetadata.description}>
+  <main class="blog-index">
+    <SecondaryNav links={[{ label: '返回首页', href: '/' }]} />
+    <section class="intro">
+      <div class="title-block">
+        <p class="section-eyebrow">Journal</p>
+        <h1>{blogMetadata.title}</h1>
+        <p>{blogMetadata.description}</p>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="博客筛选">
+      <div class="search-field">
+        <label class="search-label" for="blog-search">搜索</label>
+        <input
+          id="blog-search"
+          type="search"
+          name="search"
+          placeholder={blogMetadata.searchPlaceholder}
+          autocomplete="off"
+          data-blog-search
+        />
+      </div>
+      <div class="sort-field">
+        <label class="sort-label" for="blog-sort">排序</label>
+        <select id="blog-sort" name="sort" data-blog-sort>
+          {blogMetadata.sortOptions.map((option) => (
+            <option value={option.value} selected={option.value === defaultSort}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </section>
+
+    <p class="result-count" data-blog-count>
+      共 {posts.length} 篇文章
+    </p>
+
+    <section class="posts" data-blog-list>
+      {posts.length === 0 ? (
+        <p class="empty" data-blog-empty>暂时还没有文章，敬请期待。</p>
+      ) : (
+        posts.map(({ post, title, summary, dateISO, dateDisplay }) => (
+          <article class="post-card outline-card" data-reveal>
+            <a href={`/blog/${post.slug}/`} class="card-shell">
+              <div class="meta">
+                {dateISO && dateDisplay && <time datetime={dateISO}>{dateDisplay}</time>}
+                {post.data.tags.length > 0 && <span class="tags">{post.data.tags.join(' / ')}</span>}
+              </div>
+              <h2>{title}</h2>
+              {summary && <p class="summary">{summary}</p>}
+              <span class="read-more">阅读全文</span>
+            </a>
+          </article>
+        ))
+      )}
+    </section>
+    <p class="empty" data-blog-empty-message hidden>未找到匹配的文章，换个关键词试试。</p>
+  </main>
+  <script type="application/json" id="blog-posts-data">{JSON.stringify(postsPayload)}</script>
+  <script type="module">
+    const dataElement = document.getElementById('blog-posts-data');
+    const posts = dataElement ? JSON.parse(dataElement.textContent || '[]') : [];
+    const list = document.querySelector('[data-blog-list]');
+    const searchInput = document.querySelector('[data-blog-search]');
+    const sortSelect = document.querySelector('[data-blog-sort]');
+    const count = document.querySelector('[data-blog-count]');
+    const emptyMessage = document.querySelector('[data-blog-empty-message]');
+
+    const escapeHTML = (value = '') =>
+      value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const render = (items) => {
+      if (!list) return;
+      if (!items.length) {
+        list.innerHTML = '';
+        emptyMessage?.removeAttribute('hidden');
+      } else {
+        emptyMessage?.setAttribute('hidden', 'true');
+        list.innerHTML = items
+          .map((item) => {
+            const tags = item.tags?.length ? escapeHTML(item.tags.join(' / ')) : '';
+            const dateTime = item.dateISO ? ` datetime="${escapeHTML(item.dateISO)}"` : '';
+            const dateLabel = item.dateDisplay ? escapeHTML(item.dateDisplay) : '';
+            return `
+              <article class="post-card outline-card" data-reveal>
+                <a href="${escapeHTML(item.url)}" class="card-shell">
+                  <div class="meta">
+                    ${dateLabel ? `<time${dateTime}>${dateLabel}</time>` : ''}
+                    ${tags ? `<span class="tags">${tags}</span>` : ''}
+                  </div>
+                  <h2>${escapeHTML(item.title)}</h2>
+                  ${item.summary ? `<p class="summary">${escapeHTML(item.summary)}</p>` : ''}
+                  <span class="read-more">阅读全文</span>
+                </a>
+              </article>
+            `;
+          })
+          .join('');
+      }
+      list.querySelectorAll('[data-reveal]').forEach((node) => {
+        node.classList.add('is-visible');
+      });
+      if (count) {
+        const total = items.length;
+        count.textContent = `共 ${total} 篇文章`;
+      }
+    };
+
+    const normalize = (value = '') => value.trim().toLowerCase();
+
+    const apply = () => {
+      const term = normalize(searchInput?.value || '');
+      const sort = sortSelect?.value || '${defaultSort}';
+
+      let filtered = [...posts];
+      if (term) {
+        filtered = filtered.filter((item) => {
+          const haystack = [item.title, item.summary, item.tags?.join(' ') || '']
+            .map((segment) => segment?.toLowerCase?.() ?? '')
+            .join(' ');
+          return haystack.includes(term);
+        });
+      }
+
+      const sorters = {
+        latest: (a, b) => (b.publishDate ?? 0) - (a.publishDate ?? 0),
+        oldest: (a, b) => (a.publishDate ?? 0) - (b.publishDate ?? 0),
+        'title-az': (a, b) => a.title.localeCompare(b.title, 'zh-CN'),
+        'title-za': (a, b) => b.title.localeCompare(a.title, 'zh-CN')
+      } as const;
+
+      const sorter = sorters[sort as keyof typeof sorters] ?? sorters.latest;
+      filtered.sort(sorter);
+
+      render(filtered);
+    };
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => apply());
+    }
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => apply());
+    }
+
+    apply();
+  </script>
+</Layout>
+
+<style>
+  .blog-index {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(40px, 8vw, 72px);
+    padding: clamp(56px, 9vw, 96px) clamp(20px, 6vw, 64px) clamp(72px, 10vw, 120px);
+  }
+
+  .intro,
+  .posts,
+  .controls,
+  .result-count {
+    width: min(960px, 100%);
+  }
+
+  .intro {
+    display: flex;
+    justify-content: center;
+  }
+
+  .title-block {
+    width: min(760px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .title-block h1 {
+    font-size: clamp(2.2rem, 5.4vw, 3rem);
+    letter-spacing: -0.02em;
+  }
+
+  .title-block p {
+    color: var(--fg-muted);
+    font-size: clamp(1rem, 2.2vw, 1.18rem);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(16px, 4vw, 24px);
+    align-items: flex-end;
+  }
+
+  .search-field,
+  .sort-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 min(320px, 100%);
+  }
+
+  .sort-field {
+    flex: 0 0 min(220px, 100%);
+  }
+
+  .search-label,
+  .sort-label {
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  [data-blog-search],
+  [data-blog-sort] {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--border-hairline);
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  [data-blog-search]:focus,
+  [data-blog-sort]:focus {
+    outline: none;
+    border-color: rgba(18, 18, 18, 0.32);
+    box-shadow: 0 0 0 3px rgba(18, 18, 18, 0.08);
+  }
+
+  .result-count {
+    color: var(--fg-subtle);
+  }
+
+  .posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(20px, 3vw, 32px);
+  }
+
+  .post-card {
+    padding: clamp(22px, 3.2vw, 32px);
+    transition: transform 280ms var(--transition-soft), border-color 280ms var(--transition-soft);
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .post-card:hover,
+  .post-card:focus-within {
+    transform: translateY(-4px);
+    border-color: rgba(18, 18, 18, 0.18);
+  }
+
+  .card-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
+    min-height: 100%;
+  }
+
+  .meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .summary {
+    color: var(--fg-muted);
+  }
+
+  .read-more {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .empty {
+    color: var(--fg-subtle);
+    text-align: center;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (max-width: 720px) {
+    .blog-index {
+      padding-inline: clamp(20px, 6vw, 36px);
+    }
+
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>

@@ -1,0 +1,569 @@
+---
+import { getGalleryImages, getHeroContent, getResourceCards, getTeamMembers } from '../data/content';
+import { getCollection } from 'astro:content';
+
+const heroContent = await getHeroContent();
+const commands = heroContent.commands ?? [
+  { command: 'help', description: '获取帮助信息' },
+  { command: 'whoami', description: '“我们” 是谁？' },
+  { command: 'pwd', description: '显示当前目录' },
+  { command: 'ls [路径]', description: '列出目录内容' },
+  { command: 'cd <路径>', description: '切换目录' },
+  { command: 'cat <文件名>', description: '读取文件' },
+  { command: 'echo <文本>', description: '输出文本' },
+  { command: 'neofetch', description: '好玩的' },
+  { command: 'history', description: '查看命令记录' },
+  { command: 'date', description: '当前时间' },
+  { command: 'refresh', description: '刷新终端状态' },
+  { command: 'clear', description: '清空屏幕' }
+];
+const asciiArt = heroContent.asciiArt ?? [
+  '      /\\_/\\',
+  '     ( o   o )',
+  '==oOO==(_)==OOo=='
+];
+
+const galleryImages = await getGalleryImages();
+const postsCollection = await getCollection('blog', ({ data }) => !data.draft);
+const resourcesCollection = await getResourceCards();
+const teamMembers = await getTeamMembers();
+
+const galleryEntries = galleryImages.map((image) => {
+  const src = typeof image.src === 'string' ? image.src : '';
+  return {
+    name: src.split('/').pop() || 'image',
+    type: 'file',
+    content: `图片: ${src}`
+  };
+});
+
+const postEntries = postsCollection.map((post) => {
+  const heading = post.body.match(/^#\s+(.+)/m)?.[1]?.trim();
+  const title = post.data.title ?? heading ?? post.slug;
+  const summaryBlock =
+    post.data.summary ??
+    post.body
+      .replace(/^#.*$/gm, '')
+      .split(/\n{2,}/)
+      .find((block) => block.trim());
+  const summary = summaryBlock ? summaryBlock.replace(/\s+/g, ' ').trim() : '(摘要待补充)';
+  return {
+    name: `${post.slug}.md`,
+    type: 'file',
+    content: `${title}\n\n${summary}`
+  };
+});
+
+const resourceEntries = resourcesCollection
+  .filter((resource) => 'title' in resource)
+  .map((resource) => ({
+    name: `${resource.title.replace(/\s+/g, '_')}.md`,
+    type: 'file',
+    content: `${resource.title}\n${resource.description}`
+  }));
+
+const teamEntries = teamMembers.map((member) => ({
+  name: `${member.name.replace(/\s+/g, '_')}.txt`,
+  type: 'file',
+  content: `${member.name}\n${member.role}\n${member.bio}`
+}));
+
+const metricsContent = (heroContent.metrics ?? [])
+  .map((metric) => `${metric.label}: ${metric.value}`)
+  .join('\n');
+const commandsContent = commands
+  .map((command) => `${command.command}${command.description ? ' - ' + command.description : ''}`)
+  .join('\n');
+
+const fsTree = {
+  name: '/',
+  type: 'dir',
+  children: [
+    { name: 'about.txt', type: 'file', content: heroContent.description },
+    { name: 'metrics.txt', type: 'file', content: metricsContent },
+    { name: 'commands.txt', type: 'file', content: commandsContent },
+    { name: 'gallery', type: 'dir', children: galleryEntries },
+    { name: 'blog', type: 'dir', children: postEntries },
+    { name: 'resources', type: 'dir', children: resourceEntries },
+    { name: 'team', type: 'dir', children: teamEntries }
+  ]
+};
+
+const payload = {
+  title: heroContent.title,
+  description: heroContent.description,
+  metrics: heroContent.metrics,
+  commands,
+  asciiArt,
+  fs: fsTree
+};
+---
+<section id="top" class="hero" aria-labelledby="hero-title">
+  <div class="section-inner hero-layout">
+    <div class="hero-info" data-reveal>
+      <p class="section-eyebrow">{heroContent.title}</p>
+      <h1 id="hero-title">{heroContent.subtitle}</h1>
+      <p class="hero-description">{heroContent.description}</p>
+      <div class="hero-actions">
+        <a class="primary-action" href={heroContent.primaryAction.href}>{heroContent.primaryAction.label}</a>
+        <a class="secondary-action" href={heroContent.secondaryAction.href}>{heroContent.secondaryAction.label}</a>
+      </div>
+      <dl class="hero-metrics">
+        {heroContent.metrics.map((metric) => (
+          <div class="metric" data-reveal>
+            <dt>{metric.label}</dt>
+            <dd>{metric.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+    <div class="hero-terminal" data-terminal>
+      <div class="terminal-header">
+        <span class="terminal-dot" data-variant="close"></span>
+        <span class="terminal-dot" data-variant="min"></span>
+        <span class="terminal-dot" data-variant="max"></span>
+        <span class="terminal-title">root@foeai: ~</span>
+      </div>
+      <div class="terminal-screen" data-terminal-screen></div>
+      <div class="terminal-input" data-terminal-input-shell>
+        <label class="prompt" for="terminal-command">root@foeai:~$</label>
+        <input
+          id="terminal-command"
+          type="text"
+          name="command"
+          data-terminal-input
+          spellcheck="false"
+          autocomplete="off"
+          aria-label="终端命令输入"
+        />
+      </div>
+    </div>
+  </div>
+  <script type="application/json" id="hero-payload">{JSON.stringify(payload)}</script>
+</section>
+
+<script type="module">
+  const payloadElement = document.getElementById('hero-payload');
+  const data = payloadElement ? JSON.parse(payloadElement.textContent || '{}') : null;
+  const terminal = document.querySelector('[data-terminal]');
+
+  if (data && terminal) {
+    const screen = terminal.querySelector('[data-terminal-screen]');
+    const input = terminal.querySelector('[data-terminal-input]');
+    const promptLabel = terminal.querySelector('.prompt');
+    const root = data.fs ?? { name: '/', type: 'dir', children: [] };
+    const commandList = data.commands ?? [];
+    const escapeHTML = (raw = '') =>
+      raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const displayPath = (path) => (path === '/' ? '~' : path);
+
+    const lines = [];
+    const history = [];
+    let historyIndex = 0;
+    let currentPath = '/';
+
+    const renderLine = ({ type, text }) => {
+      if (type === 'pre') return `<pre class="line line-pre">${escapeHTML(text)}</pre>`;
+      return `<div class="line line-${type}">${escapeHTML(text)}</div>`;
+    };
+
+    const render = () => {
+      if (!screen) return;
+      screen.innerHTML = lines.map(renderLine).join('');
+      screen.scrollTop = screen.scrollHeight;
+    };
+
+    const push = (text, type = 'output') => {
+      lines.push({ type, text });
+    };
+
+    const updatePromptLabel = () => {
+      if (promptLabel) {
+        promptLabel.textContent = `root@foeai:${displayPath(currentPath)}$`;
+      }
+    };
+
+    const parts = (value) => value.split('/').filter(Boolean);
+    const normalize = (input = '') => {
+      if (!input || input === '~') return '/';
+      const absolute = input.startsWith('/');
+      const base = absolute ? [] : parts(currentPath);
+      input.split('/').forEach((segment) => {
+        if (!segment || segment === '.') return;
+        if (segment === '..') base.pop();
+        else base.push(segment);
+      });
+      return '/' + base.join('/');
+    };
+
+    const resolve = (path) => {
+      const chain = parts(path);
+      let node = root;
+      if (chain.length === 0) return node;
+      for (const part of chain) {
+        if (!node || node.type !== 'dir') return null;
+        node = (node.children || []).find((child) => child.name === part);
+        if (!node) return null;
+      }
+      return node;
+    };
+
+    const listDir = (path, { showAll = false } = {}) => {
+      const node = resolve(path);
+      if (!node) {
+        push(`ls: 无法访问 '${path}': 没有那个文件或目录`, 'error');
+        return;
+      }
+      if (node.type === 'file') {
+        push(node.name, 'output');
+        return;
+      }
+      const entries = [];
+      if (showAll) {
+        entries.push('.');
+        if (path !== '/') entries.push('..');
+      }
+      (node.children || [])
+        .map((child) => (child.type === 'dir' ? `${child.name}/` : child.name))
+        .forEach((entry) => entries.push(entry));
+
+      entries.sort((a, b) => a.localeCompare(b));
+      push(entries.join('
+') || '(空目录)', 'output');
+    };
+
+    const readFile = (path) => {
+      const node = resolve(path);
+      if (!node) {
+        push(`cat: ${path}: 没有那个文件`, 'error');
+        return;
+      }
+      if (node.type === 'dir') {
+        push(`cat: ${path}: 是一个目录`, 'error');
+        return;
+      }
+      const content = node.content ?? '';
+      push(content, content.includes('
+') ? 'pre' : 'output');
+    };
+
+    const buildTree = (node, prefix = '') => {
+      if (!node || node.type !== 'dir') return '';
+      const children = node.children || [];
+      return children
+        .map((child, index) => {
+          const isLast = index === children.length - 1;
+          const connector = isLast ? '└── ' : '├── ';
+          const nextPrefix = prefix + (isLast ? '    ' : '│   ');
+          if (child.type === 'dir') {
+            const header = `${prefix}${connector}${child.name}/`;
+            const nested = buildTree(child, nextPrefix);
+            return nested ? `${header}\n${nested}` : header;
+          }
+          return `${prefix}${connector}${child.name}`;
+        })
+        .filter(Boolean)
+        .join('
+');
+    };
+
+    const showTree = (path) => {
+      const node = resolve(path);
+      if (!node) {
+        push(`tree: 无法访问 '${path}': 没有那个文件或目录`, 'error');
+        return;
+      }
+      if (node.type === 'file') {
+        push(`tree: ${path}: 目标是一个文件`, 'error');
+        return;
+      }
+      const header = `${displayPath(path)}/`;
+      const body = buildTree(node);
+      push(body ? `${header}\n${body}` : header, 'pre');
+    };
+
+    const prompt = () => `root@foeai:${displayPath(currentPath)}$`;
+
+    const seed = () => {
+      lines.length = 0;
+      push(`欢迎来到 ${data.title} 终端，输入 help 获取帮助信息。`, 'system');
+      render();
+      updatePromptLabel();
+    };
+
+    const showHelp = () => {
+      push('可用命令:', 'output');
+      commandList.forEach((item) => {
+        push(`${item.command}${item.description ? '  —  ' + item.description : ''}`, 'output');
+      });
+    };
+
+    const handlers = {
+      help: () => showHelp(),
+      whoami: () => push(data.title, 'output'),
+      pwd: () => push(displayPath(currentPath), 'output'),
+      ls: (args) => {
+        const showAll = args.includes('-a') || args.includes('--all');
+        const targetArg = args.find((arg) => !arg.startsWith('-')) ?? '.';
+        listDir(normalize(targetArg), { showAll });
+      },
+      cd: (args) => {
+        const target = normalize(args[0] ?? '/');
+        const node = resolve(target);
+        if (!node || node.type !== 'dir') {
+          push(`cd: ${args[0] || '/'}: 没有那个目录`, 'error');
+          return;
+        }
+        currentPath = target;
+      },
+      cat: (args) => {
+        const target = args[0];
+        if (!target) {
+          push('cat: 请指定文件名', 'error');
+          return;
+        }
+        readFile(normalize(target));
+      },
+      echo: (args) => push(args.join(' '), 'output'),
+      neofetch: () => {
+        push((data.asciiArt || []).join('
+'), 'pre');
+        (data.metrics || []).forEach((metric) => {
+          push(`${metric.label}: ${metric.value}`, 'output');
+        });
+      },
+      history: () => {
+        if (!history.length) {
+          push('暂无历史记录', 'output');
+          return;
+        }
+        history.forEach((item, index) => push(`${index + 1}  ${item}`, 'output'));
+      },
+      date: () => push(new Date().toLocaleString('zh-CN', { hour12: false }), 'output'),
+      refresh: () => push('refresh: 终端状态已同步', 'system'),
+      tree: (args) => {
+        const target = normalize(args[0] ?? currentPath);
+        showTree(target);
+      },
+      clear: () => seed()
+    };
+
+    const handleSubmit = (raw) => {
+      if (!raw) return;
+      push(`${prompt()} ${raw}`, 'prompt');
+      const tokens = raw.trim().split(/\s+/);
+      const command = tokens.shift() ?? '';
+      const args = tokens;
+      const handler = handlers[command];
+      history.push(raw);
+      historyIndex = history.length;
+
+      if (handler) {
+        handler(args);
+        if (command !== 'clear') {
+          render();
+          updatePromptLabel();
+        }
+      } else {
+        push(`命令未找到: ${command}`, 'error');
+        render();
+      }
+    };
+
+    seed();
+
+    input?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const raw = input.value.trim();
+        input.value = '';
+        handleSubmit(raw);
+      }
+      if (event.key === 'ArrowUp') {
+        if (!history.length) return;
+        event.preventDefault();
+        historyIndex = Math.max(0, historyIndex - 1);
+        input.value = history[historyIndex] ?? '';
+        setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0);
+      }
+      if (event.key === 'ArrowDown') {
+        if (!history.length) return;
+        event.preventDefault();
+        historyIndex = Math.min(history.length, historyIndex + 1);
+        input.value = historyIndex === history.length ? '' : history[historyIndex];
+        setTimeout(() => input.setSelectionRange(input.value.length, input.value.length), 0);
+      }
+      if (event.key === 'l' && event.ctrlKey) {
+        event.preventDefault();
+        handlers.clear([]);
+      }
+    });
+
+    terminal.addEventListener('click', () => input?.focus());
+    window.addEventListener('load', () => input?.focus());
+  }
+</script>
+
+<style>
+  .hero {
+    padding-top: clamp(48px, 10vw, 128px);
+  }
+
+  .hero-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 1.2fr) minmax(360px, 0.95fr);
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+
+  .hero-info {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vw, 28px);
+  }
+
+  .hero-info h1 {
+    font-size: clamp(2.8rem, 6vw, 3.9rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .hero-description {
+    color: var(--fg-muted);
+    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+    max-width: 560px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .hero-metrics {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: clamp(18px, 4vw, 36px);
+    flex-wrap: wrap;
+  }
+
+  .metric {
+    min-width: 120px;
+  }
+
+  .metric dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+    margin-bottom: 8px;
+  }
+
+  .metric dd {
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 2.3rem);
+    letter-spacing: -0.01em;
+  }
+
+  .hero-terminal {
+    width: 100%;
+    max-width: clamp(420px, 50vw, 640px);
+    border-radius: 18px;
+    background: #090b16;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #1d2136 0%, #13162b 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f56;
+  }
+
+  .terminal-dot[data-variant='min'] { background: #fdbc40; }
+  .terminal-dot[data-variant='max'] { background: #33c94f; }
+
+  .terminal-title {
+    margin-left: 6px;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .terminal-screen {
+    flex: 1;
+    min-height: clamp(280px, 50vh, 460px);
+    background: radial-gradient(circle at 20% 20%, rgba(58, 81, 154, 0.18), transparent 70%), #0d1023;
+    color: rgba(226, 229, 245, 0.92);
+    font-family: 'Ubuntu Sans Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    padding: 18px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    overflow-y: auto;
+  }
+
+  .terminal-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #111426;
+  }
+
+  .terminal-input .prompt {
+    color: #8ae85f;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+  }
+
+  .terminal-input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: rgba(226, 229, 245, 0.9);
+    font-size: 0.92rem;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .line {
+    margin: 0 0 8px;
+    word-break: break-word;
+  }
+
+  .line-pre {
+    margin: 0 0 8px;
+    white-space: pre-wrap;
+  }
+
+  .line-system { color: rgba(226, 229, 245, 0.75); }
+  .line-prompt { color: #8ae85f; }
+  .line-error { color: #ff7f7f; }
+
+  @media (max-width: 960px) {
+    .hero-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-terminal {
+      max-width: 100%;
+    }
+  }
+</style>

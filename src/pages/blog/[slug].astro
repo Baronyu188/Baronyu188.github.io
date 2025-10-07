@@ -1,0 +1,237 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import SecondaryNav from '../../components/SecondaryNav.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await post.render();
+
+const headingTitle = headings?.[0]?.text ?? null;
+const bodyHeadingMatch = post.body.match(/^#\s+(.+)/m);
+const derivedTitle = post.data.title ?? headingTitle ?? bodyHeadingMatch?.[1]?.trim() ?? post.slug;
+const summarySource =
+  post.data.summary ??
+  post.body
+    .replace(/^#.*$/gm, '')
+    .split(/\n{2,}/)
+    .find((block) => block.trim());
+const derivedSummary = summarySource ? summarySource.replace(/\s+/g, ' ').trim() : undefined;
+
+const date = post.data.publishDate ?? null;
+const publishedISO = date ? date.toISOString() : undefined;
+const publishedDisplay = date
+  ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  : undefined;
+
+const rawSuggested = await getCollection('blog', ({ data, slug: s }) => !data.draft && s !== post.slug);
+const suggested = rawSuggested
+  .map((item) => {
+    const heading = item.body.match(/^#\s+(.+)/m)?.[1]?.trim();
+    const title = item.data.title ?? heading ?? item.slug;
+    const summaryBlock =
+      item.data.summary ??
+      item.body
+        .replace(/^#.*$/gm, '')
+        .split(/\n{2,}/)
+        .find((block) => block.trim());
+    const summary = summaryBlock ? summaryBlock.replace(/\s+/g, ' ').trim() : undefined;
+    const itemDate = item.data.publishDate ?? null;
+    const display = itemDate
+      ? itemDate.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
+      : undefined;
+    const iso = itemDate ? itemDate.toISOString() : undefined;
+    const order = itemDate ? itemDate.valueOf() : 0;
+    return { item, title, summary, display, iso, order };
+  })
+  .sort((a, b) => b.order - a.order)
+  .slice(0, 2);
+---
+
+<Layout title={derivedTitle} description={derivedSummary ?? derivedTitle}>
+  <main class="post-page">
+    <SecondaryNav links={[{ label: "返回首页", href: "/" }, { label: "返回博客", href: "/blog" }]} />
+    <article class="post">
+      <header class="post-header" data-reveal>
+        <p class="section-eyebrow">{post.data.tags.join(' / ') || 'Journal'}</p>
+        <h1>{derivedTitle}</h1>
+        <div class="meta">
+          {publishedISO && publishedDisplay && (
+            <time datetime={publishedISO}>{publishedDisplay}</time>
+          )}
+          {headings.length > 0 && <span>{headings.length} 个段落</span>}
+        </div>
+        {derivedSummary && <p class="summary">{derivedSummary}</p>}
+      </header>
+
+      {post.data.heroImage && (
+        <figure class="hero-visual" data-reveal>
+          <img src={post.data.heroImage} alt={derivedTitle} loading="lazy" />
+        </figure>
+      )}
+
+      <div class="post-body" data-reveal>
+        <Content />
+      </div>
+    </article>
+
+    {suggested.length > 0 && (
+      <section class="related" aria-label="推荐文章">
+        <h2>继续阅读</h2>
+        <div class="related-grid">
+          {suggested.map(({ item, title, summary, display, iso }) => (
+            <a class="related-card outline-card" href={`/blog/${item.slug}/`}>
+              {iso && display && <time datetime={iso}>{display}</time>}
+              <h3>{title}</h3>
+              {summary && <p>{summary}</p>}
+              <span>阅读全文</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .post-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(44px, 8vw, 88px);
+    padding: clamp(56px, 9vw, 104px) clamp(20px, 6vw, 64px) clamp(72px, 10vw, 128px);
+  }
+
+  .post {
+    width: min(820px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(28px, 5vw, 52px);
+  }
+
+  .post-header h1 {
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    letter-spacing: -0.02em;
+  }
+
+  .meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .summary {
+    color: var(--fg-muted);
+    font-size: 1rem;
+  }
+
+  .hero-visual {
+    margin: 0;
+    border-radius: 26px;
+    overflow: hidden;
+    border: 1px solid rgba(18, 18, 18, 0.08);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .hero-visual img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .post-body {
+    font-size: 1rem;
+    line-height: 1.78;
+    color: var(--fg);
+    display: flex;
+    flex-direction: column;
+    gap: 1.4em;
+  }
+
+  .post-body h2 {
+    margin-top: clamp(24px, 4.8vw, 40px);
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    letter-spacing: -0.01em;
+  }
+
+  .post-body h3 {
+    margin-top: clamp(18px, 3.6vw, 30px);
+    font-size: clamp(1.2rem, 2.6vw, 1.5rem);
+  }
+
+  .post-body ul,
+  .post-body ol {
+    margin: 0;
+    padding-left: 1.3em;
+  }
+
+  .post-body blockquote {
+    margin: clamp(18px, 4vw, 26px) 0;
+    padding-left: 18px;
+    border-left: 2px solid rgba(18, 18, 18, 0.12);
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  .related {
+    width: min(820px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(18px, 3vw, 26px);
+  }
+
+  .related-card {
+    padding: clamp(18px, 3vw, 26px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.88);
+    transition: transform 220ms var(--transition-soft), border-color 220ms var(--transition-soft);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .related-card:hover,
+  .related-card:focus-visible {
+    transform: translateY(-3px);
+    border-color: rgba(18, 18, 18, 0.2);
+  }
+
+  .related-card h3 {
+    font-size: 1.05rem;
+  }
+
+  .related-card span {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  @media (max-width: 720px) {
+    .post-page {
+      padding-inline: clamp(20px, 6vw, 36px);
+    }
+
+    .post {
+      gap: clamp(24px, 6vw, 40px);
+    }
+  }
+</style>

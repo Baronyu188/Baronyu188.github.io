@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "id": "resources",
+    "label": "Resources",
+    "title": "资源中心：随时调用的工具与规范",
+    "description": "设计系统、代码规范与项目档案统一在此，确保团队协作拥有一致的体验与质量。点击卡片即可跳转。"
+  },
+  "items": [
+    {
+      "title": "设计资源库",
+      "description": "统一收录品牌规范、组件库与动效样例，方便快速复用。",
+      "linkLabel": "打开资源库",
+      "href": "#",
+      "order": 1
+    },
+    {
+      "title": "技术基线指南",
+      "description": "针对前端、AI、硬件的最佳实践与代码规范，保证高质交付。",
+      "linkLabel": "查看指南",
+      "href": "#",
+      "order": 2
+    },
+    {
+      "title": "项目档案馆",
+      "description": "历年项目的拆解、复盘与可复用模块，沉淀学院级知识资产。",
+      "linkLabel": "进入档案馆",
+      "href": "#",
+      "order": 3
+    }
+  ]
+}

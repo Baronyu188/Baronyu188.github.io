@@ -1,0 +1,13 @@
+{
+  "metadata": {
+    "title": "协会博客",
+    "description": "沉淀项目复盘、AI 实践与学习指南，支持关键词搜索与多维排序。",
+    "searchPlaceholder": "搜索文章、标签或摘要",
+    "sortOptions": [
+      { "label": "按发布时间（新→旧）", "value": "latest" },
+      { "label": "按发布时间（旧→新）", "value": "oldest" },
+      { "label": "按标题 A→Z", "value": "title-az" },
+      { "label": "按标题 Z→A", "value": "title-za" }
+    ]
+  }
+}

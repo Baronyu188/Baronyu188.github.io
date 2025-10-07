@@ -1,0 +1,198 @@
+---
+import { getCollection } from 'astro:content';
+import { getGalleryImages } from '../data/content';
+
+const rawPosts = await getCollection('blog', ({ data }) => !data.draft);
+const galleryImages = await getGalleryImages();
+const fallbackHeroImage = galleryImages[0]?.src ?? '/favicon.svg';
+const posts = rawPosts
+  .map((post) => {
+    const headingMatch = post.body.match(/^#\s+(.+)/m);
+    const title = post.data.title ?? headingMatch?.[1]?.trim() ?? post.slug;
+    const summarySource =
+      post.data.summary ??
+      post.body
+        .replace(/^#.*$/gm, '')
+        .split(/\n{2,}/)
+        .find((block) => block.trim());
+    const summary = summarySource ? summarySource.replace(/\s+/g, ' ').trim() : undefined;
+    const date = post.data.publishDate ?? null;
+    const publishDate = date ? date.valueOf() : 0;
+    const dateISO = date ? date.toISOString() : undefined;
+    const dateDisplay = date
+      ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      : undefined;
+    return { post, title, summary, publishDate, dateISO, dateDisplay };
+  })
+  .sort((a, b) => b.publishDate - a.publishDate)
+  .slice(0, 3);
+---
+<section id="stories" aria-labelledby="stories-title">
+  <div class="section-inner">
+    <header class="section-header" data-reveal>
+      <p class="section-eyebrow">Stories</p>
+      <h2 class="section-title" id="stories-title">协会博客精选</h2>
+      <p class="section-description">
+        最新的 AI 实践、项目复盘与方法论沉淀。更多内容请访问 <a href="/blog">博客页</a>。
+      </p>
+    </header>
+    <div class="story-grid" data-story-grid>
+      {posts.length === 0 ? (
+        <p class="empty">博客即将上线，敬请期待。</p>
+      ) : (
+        posts.map(({ post, title, summary, dateISO, dateDisplay }) => (
+          <article class="story-card outline-card" data-story-card data-reveal>
+            <a href={`/blog/${post.slug}/`} class="story-shell">
+              <div class="story-media">
+                <img src={post.data.heroImage ?? fallbackHeroImage} alt={title} loading="lazy" decoding="async" />
+              </div>
+              <div class="story-meta">
+                {dateISO && dateDisplay && (
+                  <time datetime={dateISO}>{dateDisplay}</time>
+                )}
+                {post.data.tags.length > 0 && <span>{post.data.tags.join(' / ')}</span>}
+              </div>
+              <h3>{title}</h3>
+              {summary && <p class="story-summary">{summary}</p>}
+              <span class="story-link">阅读全文</span>
+            </a>
+          </article>
+        ))
+      )}
+    </div>
+  </div>
+</section>
+
+<script type="module">
+  const cards = Array.from(document.querySelectorAll('[data-story-card]'));
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  cards.forEach((card) => {
+    const media = card.querySelector('.story-media');
+    const image = card.querySelector('img');
+
+    const handlePointer = (event) => {
+      const rect = card.getBoundingClientRect();
+      const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+      card.style.setProperty('--pointer-x', x.toFixed(3));
+      card.style.setProperty('--pointer-y', y.toFixed(3));
+    };
+
+    card.addEventListener('pointermove', handlePointer);
+    card.addEventListener('pointerleave', () => {
+      card.style.removeProperty('--pointer-x');
+      card.style.removeProperty('--pointer-y');
+    });
+
+    card.addEventListener('focus', () => {
+      card.style.setProperty('--pointer-x', '0.5');
+      card.style.setProperty('--pointer-y', '0.5');
+    });
+
+    card.addEventListener('blur', () => {
+      card.style.removeProperty('--pointer-x');
+      card.style.removeProperty('--pointer-y');
+    });
+  });
+</script>
+
+<style>
+  .story-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(20px, 3.6vw, 32px);
+  }
+
+  .story-card {
+    position: relative;
+    padding: clamp(18px, 3.2vw, 28px);
+    background: rgba(255, 255, 255, 0.88);
+    overflow: hidden;
+    transition: transform 360ms var(--transition-soft), border-color 320ms var(--transition-soft), box-shadow 360ms var(--transition-soft);
+  }
+
+  .story-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    color: inherit;
+    text-decoration: none;
+    min-height: 100%;
+  }
+
+  .story-media {
+    position: relative;
+    width: 100%;
+    border-radius: 22px;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 320ms var(--transition-soft), box-shadow 320ms var(--transition-soft);
+  }
+
+  .story-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), rgba(255, 255, 255, 0.4), transparent 70%);
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+
+  .story-media img {
+    width: 100%;
+    height: clamp(180px, 26vw, 240px);
+    object-fit: cover;
+    transition: transform 360ms var(--transition-soft);
+  }
+
+  .story-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .story-summary {
+    color: var(--fg-muted);
+  }
+
+  .story-link {
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .story-card:hover,
+  .story-card:focus-visible {
+    transform: translateY(-8px);
+    border-color: rgba(18, 18, 18, 0.2);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+  }
+
+  .story-card:hover .story-media,
+  .story-card:focus-visible .story-media {
+    transform: rotateX(calc((0.5 - var(--pointer-y, 0.5)) * 10deg)) rotateY(calc((var(--pointer-x, 0.5) - 0.5) * 10deg));
+    box-shadow: 0 18px 48px rgba(15, 30, 60, 0.16);
+  }
+
+  .story-card:hover .story-media::after,
+  .story-card:focus-visible .story-media::after {
+    opacity: 1;
+  }
+
+  .story-card:hover img,
+  .story-card:focus-visible img {
+    transform: scale(1.06);
+  }
+
+  .empty {
+    color: var(--fg-subtle);
+    text-align: center;
+  }
+</style>

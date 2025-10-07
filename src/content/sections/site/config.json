@@ -1,0 +1,64 @@
+{
+  "navLinks": [
+    { "label": "活动", "href": "#activities" },
+    { "label": "课程", "href": "#courses" },
+    { "label": "团队", "href": "#team" },
+    { "label": "资源", "href": "#resources" },
+    { "label": "影像", "href": "#gallery" },
+    { "label": "博客", "href": "#stories" }
+  ],
+  "hero": {
+    "title": "School Computer Association",
+    "subtitle": "让技术的想象力在校园里生长。",
+    "description": "我们专注于培养校园内的未来创作者，打造项目驱动、跨学科协作、持续迭代的学习社区。",
+    "primaryAction": { "label": "下一场沙龙", "href": "#activities" },
+    "secondaryAction": { "label": "了解活动", "href": "#activities" },
+    "metrics": [
+      { "label": "年度项目", "value": "?" },
+      { "label": "活跃成员", "value": "16" }
+    ],
+    "commands": [
+      { "command": "help", "description": "获取帮助信息" },
+      { "command": "whoami", "description": "\"我们\" 是谁？" },
+      { "command": "pwd", "description": "显示当前目录" },
+      { "command": "ls [-a] [路径]", "description": "列出目录内容" },
+      { "command": "cd <路径>", "description": "切换目录" },
+      { "command": "cat <文件名>", "description": "读取文件" },
+      { "command": "echo <文本>", "description": "输出文本" },
+      { "command": "neofetch", "description": "好玩的" },
+      { "command": "tree [路径]", "description": "以结构树查看目录" },
+      { "command": "history", "description": "查看命令记录" },
+      { "command": "date", "description": "当前时间" },
+      { "command": "refresh", "description": "刷新终端状态" },
+      { "command": "clear", "description": "清空屏幕" }
+    ],
+    "asciiArt": [
+      "      /\\_/\\",
+      "     ( o   o )",
+      "==oOO==(_)==OOo=="
+    ]
+  },
+  "projectDirections": ["全部", "AI", "产品", "体验设计", "智能硬件"],
+  "joinForm": {
+    "title": "加入协会",
+    "description": "告诉我们你是谁，以及最想一起打造的技术作品。我们会安排与你志同道合的小组。",
+    "fields": [
+      { "id": "name", "label": "姓名", "placeholder": "例如：李同学", "type": "text", "required": true },
+      { "id": "email", "label": "邮箱", "placeholder": "用于通知的常用邮箱", "type": "email", "required": true },
+      {
+        "id": "direction",
+        "label": "意向方向",
+        "placeholder": "AI / 前端 / 设计 / 产品 / 硬件",
+        "type": "text",
+        "required": true
+      },
+      {
+        "id": "motivation",
+        "label": "动机与作品",
+        "placeholder": "简述加入动机或分享代表性作品链接",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  }
+}
