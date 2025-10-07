@@ -25,7 +25,7 @@ const posts = rawPosts
       : undefined;
     let heroImage = undefined;
     if (post.data.heroImage) {
-      heroImage = post.data.heroImage.startsWith('/') ? post.data.heroImage : `/content/blog/${post.slug}/${post.data.heroImage.replace(/^\.\//, '')}`;
+      heroImage = post.data.heroImage.startsWith('/') ? post.data.heroImage : `/src/content/blog/${post.slug}/${post.data.heroImage.replace(/^\.\//, '')}`;
     }
     return { post, title, summary, publishDate, dateISO, dateDisplay, heroImage };
   })

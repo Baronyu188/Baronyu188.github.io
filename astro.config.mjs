@@ -3,6 +3,6 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://baronyu188.github.io',
+  site: 'https://foeai.netlify.app',
   trailingSlash: 'always'
 });

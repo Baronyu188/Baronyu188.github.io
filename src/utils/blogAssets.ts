@@ -1,4 +1,4 @@
-const blogImageModules = import.meta.glob('../content/blog/**/*.{png,jpg,jpeg,webp,avif,svg}', {
+const blogImageModules = import.meta.glob('/src/content/blog/**/*.{png,jpg,jpeg,webp,avif,svg}', {
   eager: true,
   import: 'default'
 }) as Record<string, any>;
@@ -13,7 +13,7 @@ export const resolveBlogImage = (slug: string, source?: string | null) => {
   if (source.startsWith('/')) return source;
 
   const normalized = normalize(source);
-  const directKey = `../content/blog/${slug}/${normalized}`;
+  const directKey = `/src/content/blog/${slug}/${normalized}`;
   if (directKey in blogImageModules) {
     const module = blogImageModules[directKey];
     // 处理 import.meta.glob 返回的对象结构
