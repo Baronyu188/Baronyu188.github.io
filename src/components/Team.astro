@@ -27,6 +27,40 @@ const fallbackAvatar = getTeamFallbackImage();
             <h3>{member.name}</h3>
             <p class="team-role">{member.role}</p>
             <p class="team-bio">{member.bio}</p>
+            
+            {member.skills && member.skills.length > 0 && (
+              <div class="team-skills">
+                <h4>技能专长</h4>
+                <div class="skills-tags">
+                  {member.skills.map((skill) => (
+                    <span class="skill-tag">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {member.achievements && member.achievements.length > 0 && (
+              <div class="team-achievements">
+                <h4>主要成就</h4>
+                <ul class="achievements-list">
+                  {member.achievements.map((achievement) => (
+                    <li>{achievement}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {member.contact && (
+              <div class="team-contact">
+                <a href={`mailto:${member.contact}`} class="contact-link">
+                  <span>联系{member.name}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </a>
+              </div>
+            )}
           </div>
         </article>
       ))}
@@ -156,5 +190,80 @@ const fallbackAvatar = getTeamFallbackImage();
   .team-bio {
     color: var(--fg-muted);
     line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .team-skills, .team-achievements, .team-contact {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(18, 18, 18, 0.08);
+  }
+
+  .team-skills h4, .team-achievements h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--fg-default);
+  }
+
+  .skills-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skill-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(15, 98, 254, 0.1);
+    color: var(--fg-default);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid rgba(15, 98, 254, 0.2);
+  }
+
+  .achievements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .achievements-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 8px;
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .achievements-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--accent-primary);
+    font-weight: bold;
+  }
+
+  .contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(15, 98, 254, 0.1);
+    color: var(--accent-primary);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid rgba(15, 98, 254, 0.2);
+    transition: all 220ms var(--transition-soft);
+  }
+
+  .contact-link:hover {
+    background: rgba(15, 98, 254, 0.15);
+    border-color: rgba(15, 98, 254, 0.3);
+    transform: translateY(-1px);
   }
 </style>
