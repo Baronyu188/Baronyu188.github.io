@@ -60,7 +60,7 @@ const suggested = rawSuggested
 
 <Layout title={derivedTitle} description={derivedSummary ?? derivedTitle}>
   <main class="post-page">
-    <SecondaryNav links={[{ label: "返回首页", href: "/" }, { label: "返回博客", href: "/blog" }]} />
+    <SecondaryNav links={[{ label: "返回首页", href: "/" }, { label: "返回博客", href: "/blog/" }]} />
     <article class="post">
       <header class="post-header" data-reveal>
         <p class="section-eyebrow">{post.data.tags.join(' / ') || 'Journal'}</p>
