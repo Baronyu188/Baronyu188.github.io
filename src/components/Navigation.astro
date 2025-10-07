@@ -23,11 +23,22 @@ const navLinks = await getNavLinks();
   const nav = document.querySelector('[data-nav]');
   const links = nav ? Array.from(nav.querySelectorAll('[data-nav-link]')) : [];
   if (links.length > 0) {
-    links[0].setAttribute('data-active', '');
+    // 只为第一个#开头的锚点链接设置激活状态
+    const firstAnchorLink = links.find(link => link.getAttribute('href').startsWith('#'));
+    if (firstAnchorLink) {
+      firstAnchorLink.setAttribute('data-active', '');
+    }
   }
 
   const targets = links
-    .map((link) => document.querySelector(link.getAttribute('href')))
+    .map((link) => {
+      const href = link.getAttribute('href');
+      // 只处理#开头的锚点链接，忽略/gallery/和/blog/等外部链接
+      if (href.startsWith('#')) {
+        return document.querySelector(href);
+      }
+      return null;
+    })
     .filter(Boolean);
 
   if ('IntersectionObserver' in window) {
@@ -39,8 +50,12 @@ const navLinks = await getNavLinks();
         if (visible.length > 0) {
           const activeId = `#${visible[0].target.id}`;
           links.forEach((link) => {
-            const isActive = link.getAttribute('href') === activeId;
-            link.toggleAttribute('data-active', isActive);
+            const href = link.getAttribute('href');
+            // 只处理#开头的锚点链接，忽略/gallery/和/blog/等外部链接
+            if (href.startsWith('#')) {
+              const isActive = href === activeId;
+              link.toggleAttribute('data-active', isActive);
+            }
           });
         }
       },
