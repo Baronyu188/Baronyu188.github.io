@@ -23,7 +23,10 @@ const posts = rawPosts
     const dateDisplay = date
       ? date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
       : undefined;
-    const heroImage = resolveBlogImage(post.slug, post.data.heroImage);
+    let heroImage = undefined;
+    if (post.data.heroImage) {
+      heroImage = post.data.heroImage.startsWith('/') ? post.data.heroImage : `/content/blog/${post.slug}/${post.data.heroImage.replace(/^\.\//, '')}`;
+    }
     return { post, title, summary, publishDate, dateISO, dateDisplay, heroImage };
   })
   .sort((a, b) => b.publishDate - a.publishDate)
@@ -46,7 +49,7 @@ const posts = rawPosts
           <article class="story-card outline-card" data-story-card data-reveal>
             <a href={`/blog/${post.slug}/`} class="story-shell">
               <div class="story-media">
-                <img src={heroImage ?? fallbackHeroImage} alt={title} loading="lazy" decoding="async" />
+                <img src={heroImage || fallbackHeroImage} alt={title} loading="lazy" decoding="async" />
               </div>
               <div class="story-meta">
                 {dateISO && dateDisplay && (

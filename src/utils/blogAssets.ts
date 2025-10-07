@@ -17,14 +17,16 @@ export const resolveBlogImage = (slug: string, source?: string | null) => {
   if (directKey in blogImageModules) {
     const module = blogImageModules[directKey];
     // 处理 import.meta.glob 返回的对象结构
-    return typeof module === 'object' && module.src ? module.src : module;
+    const result = typeof module === 'object' && module.src ? module.src : module;
+    return typeof result === 'string' ? result : String(result);
   }
 
   const fallbackEntry = Object.entries(blogImageModules).find(([key]) => key.endsWith(`/${normalized}`));
   if (fallbackEntry) {
     const [, module] = fallbackEntry;
     // 处理 import.meta.glob 返回的对象结构
-    return typeof module === 'object' && module.src ? module.src : module;
+    const result = typeof module === 'object' && module.src ? module.src : module;
+    return typeof result === 'string' ? result : String(result);
   }
   return source;
 };

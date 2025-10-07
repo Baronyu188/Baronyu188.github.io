@@ -2,7 +2,7 @@
 import { getTeamFallbackImage, getTeamMembers, getTeamMetadata } from '../data/content';
 
 const [team, metadata] = await Promise.all([getTeamMembers(), getTeamMetadata()]);
-const fallbackAvatar = getTeamFallbackImage();
+const fallbackAvatar = '/favicon.svg';
 ---
 <section id="team" aria-labelledby="team-title">
   <div class="section-inner">
@@ -16,7 +16,7 @@ const fallbackAvatar = getTeamFallbackImage();
         <article class="team-card outline-card" data-reveal data-team-card>
           <div class="avatar-shell" data-team-visual>
             <img
-              src={member.image ?? fallbackAvatar}
+              src={member.image || fallbackAvatar}
               alt={`${member.name} portrait`}
               loading="lazy"
               decoding="async"

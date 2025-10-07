@@ -37,7 +37,7 @@ const projectAssetModules = import.meta.glob('../content/sections/projects/media
   import: 'default'
 }) as Record<string, string>;
 
-const teamAssetModules = import.meta.glob('../content/sections/team/media/*', {
+const teamAssetModules = import.meta.glob('../content/sections/team/media/*.{svg,png,jpg,jpeg,webp,avif}', {
   eager: true,
   import: 'default'
 }) as Record<string, string>;
@@ -49,7 +49,8 @@ const mapAssets = (modules: Record<string, any>) =>
     const fileName = toFileName(key);
     // 处理 import.meta.glob 返回的对象结构
     const imagePath = typeof value === 'object' && value.src ? value.src : value;
-    return [fileName, imagePath];
+    // 确保返回字符串路径
+    return [fileName, typeof imagePath === 'string' ? imagePath : String(imagePath)];
   })) as Record<string, string>;
 
 const galleryAssets = mapAssets(galleryAssetModules);
@@ -202,7 +203,7 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
   return sortByOrder(
     teamConfig.members.map((member) => ({
       ...clone(member),
-      image: member.image ? teamAssets[member.image] ?? '' : undefined
+      image: member.image ? `/src/content/sections/team/media/${member.image}` : undefined
     }))
   );
 }
@@ -212,8 +213,7 @@ export async function getTeamMetadata(): Promise<SectionMetadata> {
 }
 
 export function getTeamFallbackImage(): string {
-  const fallback = teamConfig.fallbackImage;
-  return fallback ? teamAssets[fallback] ?? '' : '';
+  return '/src/content/sections/team/media/default.svg';
 }
 
 export async function getResourceCards(): Promise<Array<ResourceItem | DocumentEntry>> {
